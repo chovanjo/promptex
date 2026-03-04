@@ -1,5 +1,5 @@
 # Promptex
-My prompt engineering knowledge base on crafting AI prompts.
+A beginner-friendly cheat sheet for prompt engineering techniques.
 
 ## 📚 Prompt Engineering Techniques — Master Summary
 
