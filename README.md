@@ -17,11 +17,6 @@ A beginner-friendly cheat sheet for prompt engineering techniques.
 | 5 | 💪 **Commands** | Starting prompts with strong action verbs. Direct, clear, and powerful — no fluff needed.<br><br>*Example: "List 5 ways to save money. / Explain how vaccines work. / Compare iPhone vs Android."* |
 | 6 | 🧠 **Chain of Thought (CoT)** | Instructing the AI to reason step by step before answering. Produces deeper, more accurate, well-structured responses.<br><br>*Example: "What's the best business to start with $1000? Think through this step by step, considering budget, time, and market demand."* |
 | 7 | 🎤 **Clarifying Questions** | You instruct the AI to interview YOU before starting the task. The AI gathers missing information first, then produces a perfectly tailored response.<br><br>*Example: "You are a professional party planner. Before creating my party plan, ask me all the questions you need to create the perfect result."* |
-
----
-
-### 🏆 The Ultimate Combo:
-
-> **CRAFT + CoT + Clarifying Questions = The most powerful prompt you can write!** 🔥
+| 8 | 🖼️ **Few-Shot** | Giving the AI 2–3 examples of what you want BEFORE asking it to do the task. Like showing someone how to draw a cat before asking them to draw one. The AI learns your pattern and copies it.<br><br>**Example 1 — Formal to Casual Translator:**<br>- "I require assistance." → "I need help."<br>- "Please be advised that the meeting has been postponed." → "Heads up — the meeting got pushed back."<br><br>Now translate: *"I would like to inquire about the status of my application."*<br><br>**Example 2 — Email Tone Detector:**<br>- "Per my last email..." → 😤 Passive-aggressive<br>- "Hope this helps!" → 😊 Friendly<br><br>Now classify: *"As previously stated, the deadline was last Friday."*<br><br>**Example 3 — Bug Report Formatter:**<br>- "App crashes when I click save" → 🐛 **Bug:** App crashes \| **Trigger:** Clicking save<br>- "Dark mode breaks after update" → 🐛 **Bug:** Dark mode broken \| **Trigger:** After update<br><br>Now format: *"The search bar returns no results when I type too fast."*<br><br>💡 **Pro tip:** Combine Few-Shot + CRAFT for maximum power! |
 
 ---
