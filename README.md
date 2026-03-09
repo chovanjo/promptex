@@ -237,3 +237,27 @@ Instead of giving specific examples like Few-Shot, you give the AI an abstract t
 - More flexible — not tied to specific cases 🔄
 
 ⚠️ **When NOT to use it:** For novel or unique tasks where the AI needs concrete examples to understand what you want — use Few-Shot instead!
+
+---
+
+## 15. 💡 Generate Knowledge Prompting
+
+Ask the AI to generate relevant knowledge FIRST, then use that knowledge to answer the actual question. Like writing study notes before an exam — the AI becomes its own teacher before answering! 🎓
+
+**The magic formula:**
+- *"First, generate everything important to know about X..."*
+- *"Then, using that knowledge, recommend/explain/decide..."*
+
+**Example:**
+*"First, generate everything important to know about REST and GraphQL — key concepts, pros, cons, and use cases. Then, using that knowledge, recommend which is better for a small C# e-shop API."* 💡
+
+**Key signal words:**
+- *"First generate everything about..."* 🧠
+- *"Using that knowledge..."* 🎯
+
+**Power combos:**
+- Simple decision → Generate Knowledge alone
+- Complex comparison → Generate Knowledge + Prompt Chaining 🔗
+- High stakes decision → Generate Knowledge + Tree of Thought 🌳
+
+⚠️ **Difference from CoT:** CoT reasons through a problem — Generate Knowledge builds a knowledge base BEFORE tackling it!
