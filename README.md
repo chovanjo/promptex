@@ -301,3 +301,34 @@ Instead of answering from training alone, the AI first **retrieves real, current
 Session Priming + RAG + Prompt Chaining + Tree of Thought = AI that knows your codebase AND the latest tech! 🔥
 
 ⚠️ **Difference from Generate Knowledge:** Generate Knowledge creates knowledge from training — RAG retrieves from YOUR external sources!
+
+---
+
+## 17. 🤖 Automatic Reasoning and Tool-Use (ART)
+
+The AI **automatically decides** how to reason through a problem AND which tools to use to solve it — like a smart intern who figures out WHICH tools to use and in WHAT order, all by themselves! 🧑‍💻
+
+**ART has two equal halves:**
+- 🧠 Automatic Reasoning → AI breaks the problem into steps BY ITSELF
+- 🔧 Tool-use → AI decides WHICH tools to call and WHEN
+
+**How it works:**
+1. 🎯 You give a goal
+2. 🧠 AI automatically decomposes it into subtasks
+3. 📚 AI finds similar past examples
+4. 🔧 AI selects the right tools for each subtask
+5. 🔄 AI reasons about results and decides next steps
+6. ✅ AI delivers final answer
+
+**Your impact on ART:**
+- 🎯 Goal clarity — the clearer your goal, the better ART reasons
+- 🔧 Tools you enable — web search, code execution, document retrieval
+- 🎬 Session Priming — constraints that guide HOW it reasons
+
+**Available tools:**
+- 🌐 Web search, 💻 Code execution, 🧮 Calculator, 📄 Document retrieval, 🗄️ Database queries
+
+⭐ **Most important insight:**
+ART is more about **UNDERSTANDING than DOING** — knowing it exists helps you trust the AI to figure out steps automatically, stop over-engineering prompts, and focus on GOALS not PROCEDURES! 🎯
+
+⚠️ **ART vs CoT:** CoT = YOU design the steps. ART = AI designs its own steps automatically!
