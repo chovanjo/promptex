@@ -4,6 +4,30 @@ A beginner-friendly cheat sheet for prompt engineering techniques.
 
 ---
 
+## 🗺️ Quick Reference
+
+- 🎯 [Zero-Shot](#1--zero-shot) — Simple everyday task
+- 🎨 [CRAFT Framework](#2--craft-framework) — Need a complete, structured prompt
+- 🧠 [Chain of Thought](#6--chain-of-thought-cot) — Want AI to think before answering
+- 🎤 [Clarifying Questions](#7--clarifying-questions) — Need more info before starting
+- 🖼️ [Few-Shot](#8-️-few-shot) — Show AI what style you want
+- 🔗 [Prompt Chaining](#9--prompt-chaining) — Big task to break into steps
+- 🎬 [Session Priming](#10--session-priming) — Starting a new work session
+- 🪞 [Self-Consistency](#11--self-consistency) — High-stakes decision, need confidence
+- ✂️ [Negative Prompting](#12-️-negative-prompting) — AI keeps doing things you don't want
+- 🌳 [Tree of Thought](#13--tree-of-thought) — Comparing multiple options
+- 🧬 [Meta Prompting](#14--meta-prompting) — Need reusable prompt template
+- 💡 [Generate Knowledge](#15--generate-knowledge-prompting) — AI needs context before answering
+- 🔍 [RAG](#16--retrieval-augmented-generation-rag) — Need current or your own data
+- 🤖 [ART](#17--automatic-reasoning-and-tool-use-art) — AI should use tools automatically
+- ⚙️ [APE](#18-️-automatic-prompt-engineer-ape) — Want better prompts without effort
+- 🎯 [Active-Prompt](#19--active-prompt) — Prompt keeps getting things wrong
+- 💻 [PAL](#20--program-aided-language-models-pal) — Need precise calculations
+- 🖼️ [Multimodal CoT](#21-️-multimodal-chain-of-thought-multimodal-cot) — Have screenshots or diagrams
+- 🕸️ [Graph Prompting](#22-️-graph-prompting) — Need to map relationships
+
+---
+
 ## 1. 🎯 Zero-Shot
 
 Asking the AI to complete a task without giving any examples first. The AI uses its existing training to figure it out — your go-to everyday technique.
