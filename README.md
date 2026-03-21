@@ -26,6 +26,8 @@ A beginner-friendly cheat sheet for prompt engineering techniques.
 - 🖼️ [Multimodal CoT](#21-️-multimodal-chain-of-thought-multimodal-cot) — Have screenshots or diagrams
 - 🕸️ [Graph Prompting](#22-️-graph-prompting) — Need to map relationships
 - 📐 [Structured Output](#23--structured-output-prompting) — Code needs to read the output
+- 💬 [Emotion/Stakes](#24--emotionstakes-prompting) — Need extra thorough response
+- 🪟 [Context Window Management](#25--context-window-management) — Understanding AI memory limits
 
 ---
 
@@ -640,3 +642,82 @@ Instead of getting free-form text, you force the AI to respond in a **specific, 
 - 📐 Structured Output → machine readable, strict JSON only
  
 ⚠️ **Always add:** *"No extra text — JSON only"* — otherwise AI adds explanations that break your parser! 💥
+
+---
+ 
+## 24. 💬 Emotion/Stakes Prompting
+ 
+Adding **emotional context or real stakes** to your prompt to get a more thorough, careful response from the AI. Like telling a colleague *"this goes to production tomorrow for 50,000 users"* instead of *"review this when you have time"* — same request, completely different level of attention! 🎯
+ 
+**Why it works:**
+AI is trained on human text — humans naturally respond differently when stakes are high. The AI has learned this pattern and mirrors it! 🧠
+ 
+**The 4 stakes ingredients:**
+ 
+| Ingredient | Example |
+|---|---|
+| ⏰ Deadline | *"goes live tomorrow"*, *"CTO review in 2 hours"* |
+| 👥 Scale | *"100,000 users"*, *"5 years of customer data"* |
+| 💥 Consequence | *"could cause outage"*, *"regulatory issues"* |
+| 🏦 Context | *"banking system"*, *"production database"* |
+ 
+**Your stakes toolkit:**
+- *"This goes to production for X users"* 👥
+- *"Client demo in X hours"* ⏰
+- *"Security audit next week"* 🔒
+- *"Performance issue affecting revenue"* 💰
+- *"My team is blocked on this"* 🚧
+- *"Please be extremely thorough — we cannot afford mistakes"* 💬
+ 
+**Example:**
+*"This login implementation goes live tomorrow for 50,000 banking users. A security breach would be catastrophic for our company. Please review it extremely carefully for any vulnerabilities."* 💬
+ 
+💡 **Power tip:** Add the emotional kicker at the END of your prompt for maximum effect:
+> *"We cannot afford any mistakes tonight."* 🔒
+ 
+⚠️ **Don't fake stakes** — use this when there ARE real stakes. Overusing it makes it less effective!
+ 
+⚡ **Ultimate combo:** Session Priming + Multimodal CoT + Tree of Thought + Structured Output + Emotion/Stakes = the most thorough analysis possible! 🏆
+ 
+---
+ 
+## 25. 🪟 Context Window Management
+ 
+The AI can only "see" a limited amount of text at once — like a colleague with short-term memory who forgets what was said at the start of a 3-hour meeting! 🧠
+ 
+**What is the context window?**
+Think of it as the AI's **working desk** 🗂️:
+- Everything on the desk = what AI can currently see
+- Desk has limited space = context window limit
+- Old papers fall off the edge = AI forgets earlier content!
+ 
+**Where the problem comes from:**
+- Long coding sessions → AI forgets your Session Priming 😬
+- Large codebases → AI can't see everything at once
+- Multi-day projects → context resets every new session
+- Early 2022-2023 models had only 4,000-8,000 tokens — roughly 3,000-6,000 words!
+ 
+**Old manual solutions (2022-2023):**
+- ✂️ Manually compressing prompts to save tokens
+- 📋 Obsessively summarising every few messages
+- 🔄 Carefully re-pasting context in every message
+- 📏 Counting tokens before sending anything
+ 
+**How modern AI handles it in 2026:**
+- 🪟 Massive context windows — Claude has ~200,000 tokens (~150,000 words) ✅
+- 🗜️ Auto-compression of older messages internally ✅
+- 🧲 Automatic prioritisation of recent messages ✅
+- 🔍 RAG via Claude Projects — persistent context across ALL sessions ✅
+ 
+**What still makes sense today:**
+- 🔄 Re-prime with Session Priming if AI drifts in very long sessions
+- 📋 Ask for a summary after 50+ messages: *"Summarise what we've built and decided so far."*
+- 📁 Use Claude Projects for serious multi-day work — RAG handles the rest!
+ 
+💡 **The 2026 golden rule:**
+> Short sessions → don't worry at all! ✅
+> Long sessions → re-prime if AI drifts 🔄
+> Multi-day projects → Claude Projects = persistent context forever! 🔍
+ 
+⚠️ **Context Window Management is largely automated in 2026 — but understanding WHY it exists makes you a better prompt engineer!**
+
