@@ -80,6 +80,19 @@ How the response should sound — the voice and style.
 
 *Example: "Keep it simple, concise, and friendly for beginners."*
 
+💡 **Microsoft GCSE Framework tip:** Microsoft uses a similar framework for Copilot called GCSE — Goal, Context, Source, Expectation. It's essentially a simplified CRAFT:
+
+| GCSE | CRAFT equivalent |
+|---|---|
+| 🎯 Goal | A — Action |
+| 📋 Context | C — Context + R — Role |
+| 🔍 Source | F — Format (RAG sources) |
+| 📐 Expectation | F — Format + T — Tone |
+
+> GCSE is great for beginners — simple and memorable!
+> CRAFT is more complete — adds Role and separates Format from Tone!
+> If you work with Microsoft Copilot — GCSE is their official prompting standard! 🎯
+
 ---
 
 ## 3. 🚂 Prefixing
