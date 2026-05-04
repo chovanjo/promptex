@@ -1,4 +1,4 @@
-# 30. 🔌 MCP — Model Context Protocol
+# 30. MCP — Model Context Protocol
 
 A universal standard that lets AI connect to **any external tool or service** — like a USB-C adapter 🔌 that works with everything instead of needing a different cable for every device!
 

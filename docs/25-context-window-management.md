@@ -1,4 +1,4 @@
-# 25. 🪟 Context Window Management
+# 25. Context Window Management
 
 The AI can only "see" a limited amount of text at once — like a colleague with short-term memory who forgets what was said at the start of a 3-hour meeting! 🧠
 

@@ -1,4 +1,4 @@
-# 10. 🎬 Session Priming
+# 10. Session Priming
 
 Setting the AI's rules, role, and behavior once at the beginning of a session — so every response that follows is perfectly aligned. Like briefing a personal assistant before their first day! 🧑‍💼
 

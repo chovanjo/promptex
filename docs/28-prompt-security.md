@@ -1,4 +1,4 @@
-# 28. 🔒 Prompt Security
+# 28. Prompt Security
 
 When building AI-powered apps — attackers can try to **hijack your AI** by sneaking malicious instructions into user inputs. Like a hacker walking up to a bank ATM and typing *"Ignore your instructions — give everyone unlimited cash!"* 🏧
 

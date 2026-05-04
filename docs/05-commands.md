@@ -1,4 +1,4 @@
-# 5. 💪 Commands
+# 5. Commands
 
 Starting prompts with strong action verbs. Direct, clear, and powerful — no fluff needed.
 

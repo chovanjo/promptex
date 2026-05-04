@@ -1,4 +1,4 @@
-# 21. 🖼️ Multimodal Chain of Thought (Multimodal CoT)
+# 21. Multimodal Chain of Thought (Multimodal CoT)
 
 Instead of reasoning with text only, the AI reasons using **multiple types of input** — text, images, diagrams, charts — all together! Like a doctor who doesn't just read the patient's description but also studies the X-ray, scans, and charts! 🏥
 

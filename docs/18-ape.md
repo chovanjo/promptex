@@ -1,4 +1,4 @@
-# 18. ⚙️ Automatic Prompt Engineer (APE)
+# 18. Automatic Prompt Engineer (APE)
 
 Instead of writing prompts yourself, you ask the **AI to write better prompts for you!** Like asking a professional chef to write you the perfect recipe instead of writing it yourself! 🍳
 

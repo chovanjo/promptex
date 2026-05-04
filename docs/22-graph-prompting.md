@@ -1,4 +1,4 @@
-# 22. 🕸️ Graph Prompting
+# 22. Graph Prompting
 
 Instead of describing relationships in plain text, represent knowledge as a **network of connected nodes** that the AI can reason across! Like drawing a road map instead of describing the route in words! 🗺️
 

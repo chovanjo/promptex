@@ -1,4 +1,4 @@
-# 29. 🤖 AI Agents
+# 29. AI Agents
 
 Instead of just answering questions, an AI Agent **takes autonomous actions** to complete goals — like the difference between a calculator and a personal assistant! 🧑‍💼
 

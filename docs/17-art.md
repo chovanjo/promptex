@@ -1,4 +1,4 @@
-# 17. 🤖 Automatic Reasoning and Tool-Use (ART)
+# 17. Automatic Reasoning and Tool-Use (ART)
 
 The AI **automatically decides** how to reason through a problem AND which tools to use to solve it — like a smart intern who figures out WHICH tools to use and in WHAT order, all by themselves! 🧑‍💻
 

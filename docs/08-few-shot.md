@@ -1,4 +1,4 @@
-# 8. 🖼️ Few-Shot
+# 8. Few-Shot
 
 Giving the AI 2–3 examples of what you want before asking it to do the task. Like showing someone how to draw a cat before asking them to draw one — the AI learns your pattern and copies it.
 

@@ -1,4 +1,4 @@
-# 14. 🧬 Meta Prompting
+# 14. Meta Prompting
 
 Instead of giving specific examples like Few-Shot, you give the AI an abstract template — teaching it the shape of the solution rather than the solution itself! Like teaching someone how to paint instead of showing them 3 paintings. 🎨
 

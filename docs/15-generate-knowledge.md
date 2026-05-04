@@ -1,4 +1,4 @@
-# 15. 💡 Generate Knowledge Prompting
+# 15. Generate Knowledge Prompting
 
 Ask the AI to generate relevant knowledge FIRST, then use that knowledge to answer the actual question. Like writing study notes before an exam — the AI becomes its own teacher before answering! 🎓
 

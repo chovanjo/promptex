@@ -1,4 +1,4 @@
-# 6. 🧠 Chain of Thought (CoT)
+# 6. Chain of Thought (CoT)
 
 Instructing the AI to reason step by step before answering. This produces deeper, more accurate, and well-structured responses.
 

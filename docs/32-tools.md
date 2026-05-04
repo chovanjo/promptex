@@ -1,4 +1,4 @@
-# 32. 🛠️ Tools
+# 32. Tools
 
 **Built-in capabilities** that give AI the ability to actually DO things in the world — not just talk about them! Like giving a brilliant chef actual kitchen equipment instead of just knowing recipes! 🍳
 

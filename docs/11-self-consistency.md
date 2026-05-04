@@ -1,4 +1,4 @@
-# 11. 🪞 Self-Consistency
+# 11. Self-Consistency
 
 Asking the same prompt in multiple fresh sessions and picking the most common answer. Like asking 5 different people for directions and going with the majority! 🗺️
 

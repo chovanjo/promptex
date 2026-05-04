@@ -1,4 +1,4 @@
-# 9. 🔗 Prompt Chaining
+# 9. Prompt Chaining
 
 Breaking a big task into smaller connected prompts — where each prompt builds on the output of the previous one. Like a relay race 🏃‍♂️ where each runner receives the baton and carries it forward.
 

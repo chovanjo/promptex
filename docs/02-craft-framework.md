@@ -1,4 +1,4 @@
-# 2. 🎨 CRAFT Framework
+# 2. CRAFT Framework
 
 A 5-ingredient formula for building perfect prompts. Combine all five for maximum results.
 

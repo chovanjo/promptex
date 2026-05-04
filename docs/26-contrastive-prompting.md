@@ -1,4 +1,4 @@
-# 26. 🔀 Contrastive Prompting
+# 26. Contrastive Prompting
 
 Instead of only showing good examples like Few-Shot, you show the AI **both a bad AND a good example side by side** — so it learns by seeing the difference! Like teaching a junior developer by showing wrong code next to right code! 👨‍💻
 

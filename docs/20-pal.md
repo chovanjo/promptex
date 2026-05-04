@@ -1,4 +1,4 @@
-# 20. 💻 Program-Aided Language Models (PAL)
+# 20. Program-Aided Language Models (PAL)
 
 Instead of asking AI to calculate directly — ask AI to **write code that calculates it**, then execute that code for a precise answer! Like a brilliant professor who understands everything but hands calculations to a calculator instead of doing them mentally! 🧮
 

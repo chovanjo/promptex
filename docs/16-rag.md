@@ -1,4 +1,4 @@
-# 16. 🔍 Retrieval Augmented Generation (RAG)
+# 16. Retrieval Augmented Generation (RAG)
 
 Instead of answering from training alone, the AI first **retrieves real, current information** from an external source, then generates an answer based on that! Like a detective 🕵️ who goes to the evidence room first, pulls the relevant files, THEN solves the case!
 

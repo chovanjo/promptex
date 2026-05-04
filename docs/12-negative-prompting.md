@@ -1,4 +1,4 @@
-# 12. ✂️ Negative Prompting
+# 12. Negative Prompting
 
 Telling the AI what NOT to do — just as important as telling it what to do! Like ordering a pizza and saying "no olives, no anchovies, no thick crust!" 🍕
 

@@ -1,4 +1,4 @@
-# 7. 🎤 Clarifying Questions
+# 7. Clarifying Questions
 
 You instruct the AI to interview you before starting the task. The AI gathers all missing information first, then produces a perfectly tailored response.
 

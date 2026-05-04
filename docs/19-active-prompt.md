@@ -1,4 +1,4 @@
-# 19. 🎯 Active-Prompt
+# 19. Active-Prompt
 
 Instead of choosing examples upfront and never changing them, Active-Prompt **learns from real failures** and improves over time. Like a GPS that updates itself based on wrong turns — getting smarter with every mistake! 🗺️
 

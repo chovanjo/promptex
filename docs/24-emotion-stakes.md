@@ -1,4 +1,4 @@
-# 24. 💬 Emotion/Stakes Prompting
+# 24. Emotion/Stakes Prompting
 
 Adding **emotional context or real stakes** to your prompt to get a more thorough, careful response from the AI. Like telling a colleague *"this goes to production tomorrow for 50,000 users"* instead of *"review this when you have time"* — same request, completely different level of attention! 🎯
 

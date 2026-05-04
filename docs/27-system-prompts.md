@@ -1,4 +1,4 @@
-# 27. 📜 System Prompts
+# 27. System Prompts
 
 **Invisible instructions set by the developer** that control how the AI behaves for ALL users permanently. Like briefing all your restaurant staff before any customer walks in — customers never see the briefing but every interaction is shaped by it! 🍽️
 

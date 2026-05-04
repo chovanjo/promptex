@@ -1,4 +1,4 @@
-# 31. 🎓 Skills
+# 31. Skills
 
 A **pre-built package of instructions stored as a file** that the AI reads automatically BEFORE starting a task — teaching it exactly how to perform specific tasks to YOUR standard, every time! Like handing a new employee a training manual before they start work! 📋
 

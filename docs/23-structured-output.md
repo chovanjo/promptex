@@ -1,4 +1,4 @@
-# 23. 📐 Structured Output Prompting
+# 23. Structured Output Prompting
 
 Instead of getting free-form text, you force the AI to respond in a **specific, predictable format** — JSON, XML, CSV, YAML, or any custom structure. Like handing a waiter a form to fill in instead of letting them talk freely! 🍽️
 

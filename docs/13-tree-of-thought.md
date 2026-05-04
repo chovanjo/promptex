@@ -1,4 +1,4 @@
-# 13. 🌳 Tree of Thought
+# 13. Tree of Thought
 
 Instead of thinking in a straight line, the AI explores multiple solution branches simultaneously, evaluates each one, and picks the best! Like a chess player ♟️ thinking through all possible moves before deciding.
 
