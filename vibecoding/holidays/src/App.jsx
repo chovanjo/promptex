@@ -1,5 +1,5 @@
-/* In a CDN/Babel setup these hooks were destructured from a global
-   `React` object; with Vite we import them directly from the package. */
+// In a CDN/Babel setup these hooks were destructured from a global
+// `React` object; with Vite we import them directly from the package.
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
 import { YEAR, MONTHS, DEFAULT_COLOR } from "./constants.js";
@@ -11,26 +11,28 @@ import HolidayLegend from "./components/HolidayLegend.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
 
-// The main <App /> component: the single "owner" of all shared state.
-// Keeping state in one place ("lifting state up") means every part of the
-// UI always shows the same data.
+/**
+ * The main <App /> component: the single "owner" of all shared state.
+ * Keeping state in one place ("lifting state up") means every part of the
+ * UI always shows the same data.
+ */
 export default function App() {
-  /* State:
-     ranges:    the saved holiday ranges (the app's core data)
-     selection: { anchor, hover } while a drag is in progress, else null
-     dialog:    config of the open dialog, else null
-     toast:     { message, type } for the notification, else null     */
+  // State:
+  //   ranges:    the saved holiday ranges (the app's core data)
+  //   selection: { anchor, hover } while a drag is in progress, else null
+  //   dialog:    config of the open dialog, else null
+  //   toast:     { message, type } for the notification, else null
   const [ranges, setRanges] = useState([]);
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [toast, setToast] = useState(null);
 
-  /* Derived data:
-     A Map from ISO day → the ranges covering it, rebuilt only when
-     `ranges` changes (useMemo). Most days have one range; a "travel
-     day" (one trip ends where the next begins) has two. Storing an
-     ARRAY per day keeps that case uniform. O(1) lookups while
-     rendering ~80 cells, instead of scanning `ranges` per cell. */
+  // Derived data:
+  // A Map from ISO day → the ranges covering it, rebuilt only when
+  // `ranges` changes (useMemo). Most days have one range; a "travel
+  // day" (one trip ends where the next begins) has two. Storing an
+  // ARRAY per day keeps that case uniform. O(1) lookups while
+  // rendering ~80 cells, instead of scanning `ranges` per cell.
   const dayToRanges = useMemo(() => {
     const map = new Map();
     for (const range of ranges) {
@@ -46,8 +48,8 @@ export default function App() {
     return map;
   }, [ranges]);
 
-  /* The days covered by the in-progress drag, as a Set for O(1)
-     "is this day selected?" checks in DayCell. */
+  // The days covered by the in-progress drag, as a Set for O(1)
+  // "is this day selected?" checks in DayCell.
   const selectionSet = useMemo(() => {
     const set = new Set();
     if (selection) {
@@ -62,16 +64,16 @@ export default function App() {
     return set;
   }, [selection]);
 
-  /* The drag's normalized [start, end] (or null), used to round the
-     preview's two ends and to fill the live selection badge. */
+  // The drag's normalized [start, end] (or null), used to round the
+  // preview's two ends and to fill the live selection badge.
   const selectionBounds = useMemo(() => {
     if (!selection) return null;
     const [start, end] = normalizeRange(selection.anchor, selection.hover);
     return { start, end };
   }, [selection]);
 
-  /* Toast helper. Wrapped in useCallback so the function identity is
-     stable and can safely be used inside effects/handlers. */
+  // Toast helper. Wrapped in useCallback so the function identity is
+  // stable and can safely be used inside effects/handlers.
   const showToast = useCallback((message, type = "info") => {
     setToast({ message, type });
   }, []);
@@ -85,7 +87,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  /* Range CRUD helpers */
+  // Range CRUD helpers
 
   /**
    * Decide whether a brand-new range [start, end] may be created.
@@ -119,12 +121,12 @@ export default function App() {
     setRanges((prev) => prev.filter((r) => r.id !== id));
   }
 
-  /* Drag-selection logic. The interaction is a tiny state machine:
-       idle → (mousedown on any day) → pressing
-       pressing → (mouseenter) → extend preview (now a drag)
-       pressing → (mouseup, no move) → edit the trip / make a 1-day range
-       pressing → (mouseup, moved) → open create dialog OR reject overlap
-       any → (Escape) → back to idle                                 */
+  // Drag-selection logic. The interaction is a tiny state machine:
+  //   idle → (mousedown on any day) → pressing
+  //   pressing → (mouseenter) → extend preview (now a drag)
+  //   pressing → (mouseup, no move) → edit the trip / make a 1-day range
+  //   pressing → (mouseup, moved) → open create dialog OR reject overlap
+  //   any → (Escape) → back to idle
 
   /** Begin a selection anchored at `iso`. Works on free days AND on
       an existing trip's days, so you can drag outward from a trip's
@@ -148,19 +150,19 @@ export default function App() {
     setSelection((prev) => (prev ? { ...prev, hover: iso } : prev));
   }
 
-  /* Finishing the drag must work even when the mouse button is
-     released OUTSIDE a day cell (e.g. over the page background),
-     so we listen on `document`, not on the cells.
-
-     The effect re-subscribes whenever `selection` changes, so the
-     handler always sees the current selection — and the returned
-     cleanup removes the old listener first (no duplicates, no leaks).
-
-     Why useLayoutEffect and not useEffect? useEffect runs *after*
-     the browser paints, so on a very fast click the mouseup could
-     fire before we subscribe and the selection would never be
-     finalized. useLayoutEffect runs synchronously right after the
-     mousedown re-render, closing that gap. */
+  // Finishing the drag must work even when the mouse button is
+  // released OUTSIDE a day cell (e.g. over the page background),
+  // so we listen on `document`, not on the cells.
+  //
+  // The effect re-subscribes whenever `selection` changes, so the
+  // handler always sees the current selection — and the returned
+  // cleanup removes the old listener first (no duplicates, no leaks).
+  //
+  // Why useLayoutEffect and not useEffect? useEffect runs *after*
+  // the browser paints, so on a very fast click the mouseup could
+  // fire before we subscribe and the selection would never be
+  // finalized. useLayoutEffect runs synchronously right after the
+  // mousedown re-render, closing that gap.
   useLayoutEffect(() => {
     // Subscribe only during an actual drag. Once the dialog opens we
     // keep `selection` for the preview, but the drag itself is over —
@@ -206,7 +208,7 @@ export default function App() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  /* Dialog callbacks */
+  // Dialog callbacks
 
   function closeDialog() {
     setDialog(null);
@@ -243,7 +245,7 @@ export default function App() {
     closeDialog();
   }
 
-  /* Export / Import / Clear */
+  // Export / Import / Clear
 
   /** Download the current ranges as a JSON file. Standard browser
       trick: wrap the text in a Blob, point a temporary <a download>
@@ -342,9 +344,9 @@ export default function App() {
     }
   }
 
-  /* Render. A hidden <input type="file"> does the real file picking; the
-     visible Import button just forwards its click to it (file inputs are
-     hard to style, this is the standard workaround). */
+  // Render. A hidden <input type="file"> does the real file picking; the
+  // visible Import button just forwards its click to it (file inputs are
+  // hard to style, this is the standard workaround).
   const importInputRef = useRef(null);
 
   return (

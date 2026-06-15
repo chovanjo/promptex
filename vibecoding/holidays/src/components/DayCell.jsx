@@ -1,10 +1,10 @@
-// A presentational component: it receives everything via props ("props
-// down") and reports interactions through callback props ("callbacks
-// up") — it never changes shared state itself.
-
 /**
- * One day cell in a month grid. It receives the array of ranges
- * covering this day (0, 1, or — on a travel day — 2):
+ * One day cell in a month grid. A presentational component: everything
+ * comes in via props ("props down") and interactions are reported through
+ * callback props ("callbacks up") — it never changes shared state itself.
+ *
+ * It receives the array of ranges covering this day (0, 1, or — on a
+ * travel day — 2):
  *   - 0 → empty day: white / weekend tint / live drag preview;
  *   - 1 → painted with that range's color, label on every day;
  *   - 2 → TRAVEL DAY: split into a top half (the trip you're

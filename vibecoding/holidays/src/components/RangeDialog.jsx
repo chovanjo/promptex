@@ -33,10 +33,10 @@ export default function RangeDialog({ mode, start, end, initialLabel, initialCol
   }
 
   return (
-    /* Fixed overlay that dims the page; clicking it cancels.
-       `e.target === e.currentTarget` makes sure we only cancel when
-       the dim background itself was clicked — not the white card
-       (clicks inside the card "bubble" up to this handler too). */
+    // Fixed overlay that dims the page; clicking it cancels.
+    // `e.target === e.currentTarget` makes sure we only cancel when
+    // the dim background itself was clicked — not the white card
+    // (clicks inside the card "bubble" up to this handler too).
     <div
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
