@@ -165,8 +165,10 @@ trip directly on mousedown.
 
 ## Testing notes & gotchas
 
-- Tests live in `tests/holidays.spec.js`; they navigate to `/` against the Vite
-  dev server, which Playwright starts and stops automatically (`webServer` in
+- Tests live under `tests/`, one `*.spec.js` file per feature area, with shared
+  helpers (`openApp`, `cell`, `dragSelect`, `createRange`, …) in
+  `tests/helpers.js`. They navigate to `/` against the Vite dev server, which
+  Playwright starts and stops automatically (`webServer` in
   `playwright.config.js`). Run `npm run dev` in another terminal first and it
   will be reused.
 - **Assert Tailwind class membership, not computed colour** — Tailwind 4 renders
