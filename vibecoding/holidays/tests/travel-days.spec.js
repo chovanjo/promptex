@@ -189,4 +189,39 @@ test.describe("travel days", () => {
     await expect(cell(page, "july", "2026-07-30")).toHaveClass(new RegExp(CLS.blue));
     await expect(cell(page, "july", "2026-07-30").getByTestId("travel-leaving")).toHaveCount(0);
   });
+
+  test("a travel day on a public holiday still shows the holiday marker", async ({ page }) => {
+    // Jul 5 is a Czech public holiday. Make it the shared travel day: one
+    // trip ends on Jul 5, the next begins on Jul 5. The holiday dot must
+    // still render on the split cell (a separate DayCell code path).
+    await createRange(page, cell(page, "july", "2026-07-04"), cell(page, "july", "2026-07-05"),
+      "Dekýš", "blue");
+    await createRange(page, cell(page, "july", "2026-07-06"), cell(page, "july", "2026-07-05"),
+      "Praha", "green");
+
+    const jul5 = travelCell(page, "2026-07-05");
+    await expect(jul5.cell).toHaveAttribute("data-testid", "travel-day");
+    await expect(jul5.cell.getByTestId("holiday-marker")).toBeVisible();
+  });
+
+  test("deleting the middle trip of a chain un-splits both shared days", async ({ page }) => {
+    // A chain: Dekýš Jul 1–3, Praha Jul 3–5, Tábor Jul 5–7 — so Jul 3 and
+    // Jul 5 are both travel days (Praha is the middle trip).
+    await createRange(page, cell(page, "july", "2026-07-01"), cell(page, "july", "2026-07-03"), "Dekýš", "blue");
+    await createRange(page, cell(page, "july", "2026-07-05"), cell(page, "july", "2026-07-03"), "Praha", "green");
+    await createRange(page, cell(page, "july", "2026-07-07"), cell(page, "july", "2026-07-05"), "Tábor", "red");
+
+    // Delete the middle trip (Praha) via its list row.
+    await page.getByTestId("range-item").filter({ hasText: "Praha" }).getByTestId("delete-range-btn").click();
+
+    // Both boundary days collapse back to single, un-split cells…
+    for (const iso of ["2026-07-03", "2026-07-05"]) {
+      await expect(cell(page, "july", iso)).not.toHaveAttribute("data-testid", "travel-day");
+      await expect(cell(page, "july", iso).getByTestId("travel-leaving")).toHaveCount(0);
+    }
+    // …and the two outer trips are untouched.
+    await expect(page.getByTestId("range-item")).toHaveCount(2);
+    await expect(cell(page, "july", "2026-07-03").getByTestId("range-label")).toHaveText("Dekýš");
+    await expect(cell(page, "july", "2026-07-05").getByTestId("range-label")).toHaveText("Tábor");
+  });
 });

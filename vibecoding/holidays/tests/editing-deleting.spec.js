@@ -75,4 +75,23 @@ test.describe("editing and deleting ranges", () => {
       "Second attempt");
     await expect(page.getByTestId("range-item")).toContainText("Second attempt");
   });
+
+  test("recoloring a trip that forms a travel day updates its half", async ({ page }) => {
+    // The block's beforeEach already created "Original" (Jul 13–17, blue).
+    // Add a second trip that begins on Jul 17, so Jul 17 becomes a travel
+    // day: top half = Original (leaving), bottom half = Next (arriving).
+    await createRange(page, cell(page, "july", "2026-07-19"), cell(page, "july", "2026-07-17"),
+      "Next", "green");
+    const leaving = cell(page, "july", "2026-07-17").getByTestId("travel-leaving");
+    await expect(leaving).toHaveClass(new RegExp(CLS.blue));
+
+    // Recolor Original to red via its list row; the leaving half repaints.
+    await page.getByTestId("range-item").filter({ hasText: "Original" }).getByTestId("edit-range-btn").click();
+    await dismissSuggestions(page);
+    await page.getByTestId("color-red").click();
+    await page.getByTestId("save-btn").click();
+
+    await expect(leaving).toHaveClass(new RegExp(CLS.red));
+    await expect(leaving).toHaveText("Original");
+  });
 });
