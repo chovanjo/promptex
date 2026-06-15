@@ -70,7 +70,9 @@ npm run preview             # serve the production build locally
     **accent-insensitive** ("ta" → Tábor); arrow-key navigation, Enter to pick,
     Escape closes the dropdown first then the dialog, chevron toggles it.
   - **Colour** is one of **9 pastel swatches** (no custom colour picker).
-- **Click a trip** (or use the list) to rename, recolour, or delete it.
+- **Click a trip** (a day cell, or a travel-day half) to rename, recolour, or
+  delete it — the calendar is the only view of planned trips; there is no
+  separate list.
 
 **Travel days** (the headline feature)
 - When one trip **ends on the same day** the next trip **begins**, that shared
@@ -131,11 +133,11 @@ src/
   heart of the travel-day rule), `normalizeRange`, **`buildMonthGrid`** (builds a
   month's weeks incl. filler/extra/blank days), and `stripDiacritics`
   (accent-insensitive label filtering).
-- **`components/`:** `LabelCombobox`, `RangeDialog`, `RangeList`, `HolidayLegend`,
+- **`components/`:** `LabelCombobox`, `RangeDialog`, `HolidayLegend`,
   `Toast`, `SelectionBadge`, `DayCell` (renders empty / single / split-travel
   days), `MonthCard`. Each file has a default export.
-- **`App.jsx`:** owns all state (`ranges`, `selection`, `dialog`, `toast`,
-  `hoveredRangeId`); derives `dayToRanges`, `selectionSet`, `selectionBounds`;
+- **`App.jsx`:** owns all state (`ranges`, `selection`, `dialog`, `toast`);
+  derives `dayToRanges`, `selectionSet`, `selectionBounds`;
   holds `validateNewRange` (create rules) and `validateImportedRanges` (import
   rules), plus the drag state machine.
 - **`main.jsx`:** `createRoot(...).render(<App />)`.

@@ -25,22 +25,16 @@ test.describe("creating ranges", () => {
       await expect(cell(page, "july", `2026-07-${day}`).getByTestId("range-label"))
         .toHaveText("Beach trip");
     }
-
-    // And the range appears in the list with its date span.
-    const item = page.getByTestId("range-item");
-    await expect(item).toHaveCount(1);
-    await expect(item).toContainText("Beach trip");
-    await expect(item).toContainText("Jul 13 – Jul 17 · 5d");
   });
 
   test("dragging backwards (Jul 17 → Jul 13) produces the same range", async ({ page }) => {
     await createRange(page, cell(page, "july", "2026-07-17"), cell(page, "july", "2026-07-13"),
       "Backwards");
 
-    await expect(page.getByTestId("range-item")).toContainText("Jul 13 – Jul 17 · 5d");
-    // The chronological start (Jul 13) is part of the range and carries
-    // the label, even though the drag started on Jul 17.
+    // The chronological start (Jul 13) AND end (Jul 17) are part of the
+    // range and carry the label, even though the drag started on Jul 17.
     await expect(cell(page, "july", "2026-07-13").getByTestId("range-label")).toHaveText("Backwards");
+    await expect(cell(page, "july", "2026-07-17").getByTestId("range-label")).toHaveText("Backwards");
   });
 
   test("a single click creates a one-day range", async ({ page }) => {
@@ -49,7 +43,7 @@ test.describe("creating ranges", () => {
     await page.getByTestId("label-input").fill("Day off");
     await page.getByTestId("save-btn").click();
 
-    await expect(page.getByTestId("range-item")).toContainText("Aug 10 – Aug 10 · 1d");
+    await expect(cell(page, "august", "2026-08-10").getByTestId("range-label")).toHaveText("Day off");
   });
 
   test("a range can span the July/August boundary across the two grids", async ({ page }) => {
@@ -64,7 +58,7 @@ test.describe("creating ranges", () => {
     await expect(cell(page, "july", "2026-07-31")).toHaveClass(red);
     await expect(cell(page, "august", "2026-08-01")).toHaveClass(red);
     await expect(cell(page, "august", "2026-08-02")).toHaveClass(red);
-    await expect(page.getByTestId("range-item")).toContainText("Jul 30 – Aug 2 · 4d");
+    await expect(cell(page, "july", "2026-07-30").getByTestId("range-label")).toHaveText("Cross month");
   });
 
   test("a range can be planned on the extra June week", async ({ page }) => {
@@ -72,13 +66,13 @@ test.describe("creating ranges", () => {
       "Late June", "green");
 
     await expect(cell(page, "july", "2026-06-24")).toHaveClass(new RegExp(CLS.green));
-    await expect(page.getByTestId("range-item")).toContainText("Jun 22 – Jun 26 · 5d");
+    await expect(cell(page, "july", "2026-06-22").getByTestId("range-label")).toHaveText("Late June");
   });
 
   test("an empty label falls back to a default name", async ({ page }) => {
     await dragSelect(page, cell(page, "july", "2026-07-20"), cell(page, "july", "2026-07-21"));
     await page.getByTestId("save-btn").click(); // save without typing anything
-    await expect(page.getByTestId("range-item")).toContainText("Holiday");
+    await expect(cell(page, "july", "2026-07-20").getByTestId("range-label")).toHaveText("Holiday");
   });
 
   test("the dialog summarises the selected span and day count", async ({ page }) => {
@@ -97,7 +91,7 @@ test.describe("creating ranges", () => {
     await page.keyboard.press("Enter");
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toContainText("Quick save");
+    await expect(cell(page, "july", "2026-07-13").getByTestId("range-label")).toHaveText("Quick save");
   });
 
   test("a new range uses the default pastel blue when no color is picked", async ({ page }) => {

@@ -7,7 +7,6 @@ import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./date
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
-import RangeList from "./components/RangeList.jsx";
 import HolidayLegend from "./components/HolidayLegend.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
@@ -24,13 +23,11 @@ export default function App() {
      ranges:    the saved holiday ranges (the app's core data)
      selection: { anchor, hover } while a drag is in progress, else null
      dialog:    config of the open dialog, else null
-     toast:     { message, type } for the notification, else null
-     hoveredRangeId: range highlighted from the list, else null     */
+     toast:     { message, type } for the notification, else null     */
   const [ranges, setRanges] = useState([]);
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [toast, setToast] = useState(null);
-  const [hoveredRangeId, setHoveredRangeId] = useState(null);
 
   /* ---- Derived data --------------------------------------------
      A Map from ISO day → the ranges covering it, rebuilt only when
@@ -396,7 +393,6 @@ export default function App() {
             dayToRanges={dayToRanges}
             selectionSet={selectionSet}
             selectionBounds={selectionBounds}
-            hoveredRangeId={hoveredRangeId}
             onStartDrag={handleStartDrag}
             onEditRange={handleEditRange}
             onDayMouseEnter={handleDayMouseEnter}
@@ -406,17 +402,6 @@ export default function App() {
 
       {/* ---------- Holiday legend ---------- */}
       <HolidayLegend />
-
-      {/* ---------- Saved ranges ---------- */}
-      <section className="bg-white rounded-xl shadow p-4">
-        <h2 className="text-lg font-bold mb-2">Planned ranges</h2>
-        <RangeList
-          ranges={ranges}
-          onEdit={(range) => setDialog({ mode: "edit", range })}
-          onDelete={deleteRange}
-          onHoverRange={setHoveredRangeId}
-        />
-      </section>
 
       {/* ---------- Overlays (rendered only when needed) ---------- */}
       {dialog && (

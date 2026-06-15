@@ -1,7 +1,7 @@
 // The label combobox: showing/filtering suggestions (accent-insensitive),
 // keyboard navigation, the chevron toggle, and Escape's two-step close.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, dragSelect } from "./helpers.js";
+import { openApp, cell, dragSelect, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -26,7 +26,7 @@ test.describe("label dropdown", () => {
     await expect(page.getByTestId("label-input")).toHaveValue("Praha");
 
     await page.getByTestId("save-btn").click();
-    await expect(page.getByTestId("range-item")).toContainText("Praha");
+    await expect(cell(page, "july", "2026-07-07").getByTestId("range-label")).toHaveText("Praha");
   });
 
   test("typing filters the suggestions, ignoring accents", async ({ page }) => {
@@ -43,7 +43,7 @@ test.describe("label dropdown", () => {
     await input.fill("Mountains");
     await expect(page.getByTestId("label-options")).not.toBeVisible();
     await page.getByTestId("save-btn").click();
-    await expect(page.getByTestId("range-item")).toContainText("Mountains");
+    await expect(cell(page, "july", "2026-07-07").getByTestId("range-label")).toHaveText("Mountains");
   });
 
   test("arrow keys + Enter pick an option without saving; next Enter saves", async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe("label dropdown", () => {
 
     await input.press("Enter");     // dropdown is closed now → saves
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toContainText("Dekýš");
+    await expect(cell(page, "july", "2026-07-07").getByTestId("range-label")).toHaveText("Dekýš");
   });
 
   test("Escape closes the dropdown first and the dialog second", async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe("label dropdown", () => {
 
     await page.keyboard.press("Escape"); // 2nd: cancels the dialog
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("reopening the dropdown after picking a value shows all options again", async ({ page }) => {
@@ -87,14 +87,14 @@ test.describe("label dropdown", () => {
     await page.getByTestId("label-option").filter({ hasText: "Grécko" }).click();
     await expect(input).toHaveValue("Grécko");
     await page.getByTestId("save-btn").click();
-    await expect(page.getByTestId("range-item")).toContainText("Grécko");
+    await expect(cell(page, "july", "2026-07-07").getByTestId("range-label")).toHaveText("Grécko");
   });
 
   test("the edit dialog shows all options despite the pre-filled label", async ({ page }) => {
     // Save the pending dialog as Praha first, then reopen it for editing.
     await page.getByTestId("label-input").fill("Praha");
     await page.getByTestId("save-btn").click();
-    await page.getByTestId("range-item").getByTestId("edit-range-btn").click();
+    await cell(page, "july", "2026-07-07").click(); // reopen the trip for editing
 
     await expect(page.getByTestId("label-input")).toHaveValue("Praha");
     await page.getByTestId("label-input").click();

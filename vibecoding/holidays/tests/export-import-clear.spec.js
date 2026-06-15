@@ -2,7 +2,7 @@
 // dates, colors, overlaps), full-replace semantics, and Clear all.
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
-import { openApp, cell, createRange, CLS } from "./helpers.js";
+import { openApp, cell, createRange, CLS, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -44,7 +44,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("Imported 1 range(s)");
-    await expect(page.getByTestId("range-item")).toContainText("Imported trip");
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Imported trip");
     await expect(cell(page, "july", "2026-07-15")).toHaveClass(new RegExp(CLS.green));
   });
 
@@ -59,14 +59,14 @@ test.describe("export, import and clear", () => {
     // Wipe everything (accept the confirm dialog)…
     page.once("dialog", (dialog) => dialog.accept());
     await page.getByTestId("clear-btn").click();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
 
     // …then import the exported file: the plan must be back, identical.
     await page.getByTestId("import-input").setInputFiles({
       name: "export.json", mimeType: "application/json", buffer: Buffer.from(exported),
     });
-    await expect(page.getByTestId("range-item")).toContainText("Round trip");
-    await expect(page.getByTestId("range-item")).toContainText("Jul 13 – Jul 17 · 5d");
+    await expect(cell(page, "july", "2026-07-13").getByTestId("range-label")).toHaveText("Round trip");
+    await expect(cell(page, "july", "2026-07-17").getByTestId("range-label")).toHaveText("Round trip");
   });
 
   test("importing a malformed file shows an error and keeps current state", async ({ page }) => {
@@ -78,8 +78,8 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("Import failed");
-    await expect(page.getByTestId("range-item")).toHaveCount(1);
-    await expect(page.getByTestId("range-item")).toContainText("Keep me");
+    // The existing trip is untouched.
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Keep me");
   });
 
   test("importing a file without a ranges array is rejected", async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("must contain");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("importing a range that ends before it starts is rejected", async ({ page }) => {
@@ -101,7 +101,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("ends before it starts");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("importing a range with a missing label is rejected", async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("Each range needs");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("importing a range with a malformed date is rejected", async ({ page }) => {
@@ -125,7 +125,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("Each range needs");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("importing an empty ranges array is accepted and clears the plan", async ({ page }) => {
@@ -138,8 +138,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("Imported 0 range(s)");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
-    await expect(page.getByTestId("empty-hint")).toBeVisible();
+    await expectEmptyCalendar(page);
   });
 
   test("a successful import replaces the existing ranges", async ({ page }) => {
@@ -153,10 +152,11 @@ test.describe("export, import and clear", () => {
       name: "new-plan.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
     });
 
-    // Import is a full replace, not a merge.
-    await expect(page.getByTestId("range-item")).toHaveCount(1);
-    await expect(page.getByTestId("range-item")).toContainText("New plan");
+    // Import is a full replace, not a merge: the new plan shows and the
+    // old plan's days are blank again.
+    await expect(cell(page, "august", "2026-08-11").getByTestId("range-label")).toHaveText("New plan");
     await expect(cell(page, "july", "2026-07-14")).not.toHaveClass(new RegExp(CLS.green));
+    await expect(cell(page, "july", "2026-07-14").getByTestId("range-label")).toHaveCount(0);
   });
 
   test("importing a range with a non-Tailwind color (old hex format) is rejected", async ({ page }) => {
@@ -168,7 +168,7 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("invalid color");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("importing ranges that overlap each other is rejected", async ({ page }) => {
@@ -183,19 +183,19 @@ test.describe("export, import and clear", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText("overlap");
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("Clear all empties the planner after confirmation", async ({ page }) => {
     await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-17"), "A");
     await createRange(page, cell(page, "august", "2026-08-10"), cell(page, "august", "2026-08-12"), "B");
-    await expect(page.getByTestId("range-item")).toHaveCount(2);
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("A");
+    await expect(cell(page, "august", "2026-08-11").getByTestId("range-label")).toHaveText("B");
 
     page.once("dialog", (dialog) => dialog.accept());
     await page.getByTestId("clear-btn").click();
 
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
-    await expect(page.getByTestId("empty-hint")).toBeVisible();
+    await expectEmptyCalendar(page);
   });
 
   test("declining the Clear all confirmation keeps the ranges", async ({ page }) => {
@@ -204,6 +204,6 @@ test.describe("export, import and clear", () => {
     page.once("dialog", (dialog) => dialog.dismiss()); // click "Cancel" in the confirm box
     await page.getByTestId("clear-btn").click();
 
-    await expect(page.getByTestId("range-item")).toHaveCount(1);
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Safe");
   });
 });

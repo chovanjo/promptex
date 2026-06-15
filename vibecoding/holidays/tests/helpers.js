@@ -69,3 +69,14 @@ export async function createRange(page, fromCell, toCell, label, presetName = "b
     (Asserting the computed CSS value would be brittle: Tailwind 4
     resolves its palette to oklch() colors, not rgb().) */
 export const CLS = { red: "bg-red-200", green: "bg-green-200", blue: "bg-blue-200", violet: "bg-violet-200" };
+
+/**
+ * Assert the calendar holds no trips at all. The planner has no separate
+ * list any more, so "nothing is planned" is read straight off the grid:
+ * single-day/range cells render a `range-label`, travel days render a
+ * `travel-leaving` half — an empty plan shows neither.
+ */
+export async function expectEmptyCalendar(page) {
+  await expect(page.getByTestId("range-label")).toHaveCount(0);
+  await expect(page.getByTestId("travel-leaving")).toHaveCount(0);
+}

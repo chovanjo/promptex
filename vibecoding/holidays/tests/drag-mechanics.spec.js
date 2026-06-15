@@ -1,7 +1,7 @@
 // Drag mechanics: live highlight, cursors, the selection badge, rounded
 // ends, and releasing the mouse anywhere on the page.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, createRange } from "./helpers.js";
+import { openApp, cell, createRange, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -21,7 +21,7 @@ test.describe("drag mechanics", () => {
 
     await page.mouse.up(); // finish the drag, then discard the range
     await page.getByTestId("cancel-btn").click();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("free days show the 'cell' cursor, occupied days the pointer", async ({ page }) => {

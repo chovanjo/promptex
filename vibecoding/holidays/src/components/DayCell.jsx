@@ -16,7 +16,7 @@
  * Empty days start a drag (onStartDrag); occupied days/halves open
  * the matching range for editing (onEditRange).
  */
-export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, isRangeHovered, onStartDrag, onEditRange, onMouseEnter }) {
+export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
   const { iso, dayNumber, inMonth, isWeekend, holiday } = day;
   const isTravelDay = ranges.length === 2;
 
@@ -50,8 +50,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
       </div>
     );
 
-    const wrapperClasses = "relative h-14 border border-gray-100 cursor-pointer select-none" +
-      (isRangeHovered ? " ring-2 ring-inset ring-gray-700" : "");
+    const wrapperClasses = "relative h-14 border border-gray-100 cursor-pointer select-none";
 
     return (
       <div
@@ -102,7 +101,6 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
   }
 
   if (!inMonth && !range) classes.push("text-gray-400"); // dim filler days
-  if (isRangeHovered) classes.push("ring-2 ring-inset ring-gray-700");
 
   return (
     <div

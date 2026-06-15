@@ -1,7 +1,7 @@
 // Cancelling a pending selection: Cancel button, Escape, clicking the
 // dim backdrop, and Escape mid-drag.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, dragSelect } from "./helpers.js";
+import { openApp, cell, dragSelect, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -13,8 +13,7 @@ test.describe("cancelling a selection", () => {
     await page.getByTestId("cancel-btn").click();
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
-    await expect(page.getByTestId("empty-hint")).toBeVisible();
+    await expectEmptyCalendar(page);
   });
 
   test("Escape closes the dialog without saving", async ({ page }) => {
@@ -23,7 +22,7 @@ test.describe("cancelling a selection", () => {
     await page.keyboard.press("Escape");
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("clicking the dim background around the dialog cancels it", async ({ page }) => {
@@ -35,7 +34,7 @@ test.describe("cancelling a selection", () => {
     await page.mouse.click(10, 10);
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("Escape during the drag itself abandons the selection", async ({ page }) => {
@@ -46,6 +45,6 @@ test.describe("cancelling a selection", () => {
     await page.mouse.up();
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 });

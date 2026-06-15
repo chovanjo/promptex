@@ -2,7 +2,7 @@
 // splits into leaving/arriving halves. Covers creating, chaining,
 // editing each half, deleting, importing, and crossing the month line.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, createRange, CLS } from "./helpers.js";
+import { openApp, cell, createRange, CLS, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -108,7 +108,10 @@ test.describe("travel days", () => {
     const jul5 = travelCell(page, "2026-07-05");
     await expect(jul5.leaving).toHaveText("Praha");
     await expect(jul5.arriving).toHaveText("Tábor");
-    await expect(page.getByTestId("range-item")).toHaveCount(3);
+    // All three trips exist — each shows on a day it solely owns.
+    await expect(cell(page, "july", "2026-07-02").getByTestId("range-label")).toHaveText("Dekýš");
+    await expect(cell(page, "july", "2026-07-04").getByTestId("range-label")).toHaveText("Praha");
+    await expect(cell(page, "july", "2026-07-06").getByTestId("range-label")).toHaveText("Tábor");
   });
 
   test("each half of a travel day edits its own trip", async ({ page }) => {
@@ -128,8 +131,10 @@ test.describe("travel days", () => {
     await createRange(page, cell(page, "july", "2026-07-01"), cell(page, "july", "2026-07-03"), "Dekýš", "blue");
     await createRange(page, cell(page, "july", "2026-07-05"), cell(page, "july", "2026-07-03"), "Praha", "green");
 
-    // Delete Dekýš (the leaving trip) via its list row.
-    await page.getByTestId("range-item").filter({ hasText: "Dekýš" }).getByTestId("delete-range-btn").click();
+    // Delete Dekýš (the leaving trip): open it from a day it solely owns
+    // (Jul 2) and use the dialog's Delete button.
+    await cell(page, "july", "2026-07-02").click();
+    await page.getByTestId("delete-btn").click();
 
     // Jul 3 is now just Praha's first day — single color, no split.
     const jul3 = cell(page, "july", "2026-07-03");
@@ -149,7 +154,9 @@ test.describe("travel days", () => {
       name: "chain.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
     });
 
-    await expect(page.getByTestId("range-item")).toHaveCount(2);
+    // Both trips landed; Jul 3 is their shared travel day.
+    await expect(cell(page, "july", "2026-07-02").getByTestId("range-label")).toHaveText("Dekýš");
+    await expect(cell(page, "july", "2026-07-04").getByTestId("range-label")).toHaveText("Praha");
     await expect(travelCell(page, "2026-07-03").cell).toHaveAttribute("data-testid", "travel-day");
   });
 
@@ -166,7 +173,7 @@ test.describe("travel days", () => {
     });
 
     await expect(page.getByTestId("toast")).toContainText(/more than two trips/i);
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("a travel day works across the month boundary (Jul → Aug)", async ({ page }) => {
@@ -211,16 +218,18 @@ test.describe("travel days", () => {
     await createRange(page, cell(page, "july", "2026-07-05"), cell(page, "july", "2026-07-03"), "Praha", "green");
     await createRange(page, cell(page, "july", "2026-07-07"), cell(page, "july", "2026-07-05"), "Tábor", "red");
 
-    // Delete the middle trip (Praha) via its list row.
-    await page.getByTestId("range-item").filter({ hasText: "Praha" }).getByTestId("delete-range-btn").click();
+    // Delete the middle trip (Praha): open it from a day it solely owns
+    // (Jul 4) and use the dialog's Delete button.
+    await cell(page, "july", "2026-07-04").click();
+    await page.getByTestId("delete-btn").click();
 
     // Both boundary days collapse back to single, un-split cells…
     for (const iso of ["2026-07-03", "2026-07-05"]) {
       await expect(cell(page, "july", iso)).not.toHaveAttribute("data-testid", "travel-day");
       await expect(cell(page, "july", iso).getByTestId("travel-leaving")).toHaveCount(0);
     }
-    // …and the two outer trips are untouched.
-    await expect(page.getByTestId("range-item")).toHaveCount(2);
+    // …and the two outer trips are untouched (Praha's own day is now free).
+    await expect(cell(page, "july", "2026-07-04").getByTestId("range-label")).toHaveCount(0);
     await expect(cell(page, "july", "2026-07-03").getByTestId("range-label")).toHaveText("Dekýš");
     await expect(cell(page, "july", "2026-07-05").getByTestId("range-label")).toHaveText("Tábor");
   });

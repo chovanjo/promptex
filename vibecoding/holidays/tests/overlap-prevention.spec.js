@@ -19,7 +19,9 @@ test.describe("overlap prevention", () => {
 
     await expect(page.getByTestId("toast")).toContainText("cannot overlap");
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(1); // still just the original
+    // Still just the original: its days remain painted, the attempted day is free.
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Existing");
+    await expect(cell(page, "july", "2026-07-20").getByTestId("range-label")).toHaveCount(0);
   });
 
   test("a new range that fully contains an existing one is rejected", async ({ page }) => {
@@ -32,6 +34,8 @@ test.describe("overlap prevention", () => {
 
     await expect(page.getByTestId("toast")).toContainText("cannot overlap");
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toHaveCount(1);
+    // Still just the original: its days remain painted, the attempted day is free.
+    await expect(cell(page, "july", "2026-07-14").getByTestId("range-label")).toHaveText("Existing");
+    await expect(cell(page, "july", "2026-07-10").getByTestId("range-label")).toHaveCount(0);
   });
 });
