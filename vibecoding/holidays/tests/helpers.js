@@ -1,10 +1,7 @@
-// =====================================================================
-// Shared helpers for the Holiday Planner e2e suite.
-//
-// The tests are split into one `*.spec.js` file per feature area; every
-// file imports the helpers it needs from here. This file is NOT a spec
-// (it has no `.spec` in its name), so Playwright never runs it directly.
-// =====================================================================
+// Shared helpers for the Holiday Planner e2e suite. The tests are split
+// into one `*.spec.js` file per feature area; each imports the helpers it
+// needs from here. This file is NOT a spec (no `.spec` in its name), so
+// Playwright never runs it directly.
 import { expect } from "@playwright/test";
 
 /**

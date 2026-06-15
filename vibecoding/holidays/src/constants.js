@@ -1,8 +1,5 @@
-/* =================================================================
-   SECTION 1 — CONSTANTS
-   Fixed configuration values live in one module so they are easy to
-   find and change. Naming convention: UPPER_SNAKE_CASE.
-   ================================================================= */
+// Fixed configuration values for the planner. Naming convention:
+// UPPER_SNAKE_CASE.
 
 /** The year this planner is built for. */
 export const YEAR = 2026;

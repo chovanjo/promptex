@@ -11,15 +11,11 @@ import HolidayLegend from "./components/HolidayLegend.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
 
-/* =================================================================
-   SECTION 4 — THE MAIN <App /> COMPONENT
-   This is the single "owner" of all shared state. Keeping state in
-   one place ("lifting state up") means every part of the UI always
-   shows the same data.
-   ================================================================= */
-
+// The main <App /> component: the single "owner" of all shared state.
+// Keeping state in one place ("lifting state up") means every part of the
+// UI always shows the same data.
 export default function App() {
-  /* ---- State ---------------------------------------------------
+  /* State:
      ranges:    the saved holiday ranges (the app's core data)
      selection: { anchor, hover } while a drag is in progress, else null
      dialog:    config of the open dialog, else null
@@ -29,7 +25,7 @@ export default function App() {
   const [dialog, setDialog] = useState(null);
   const [toast, setToast] = useState(null);
 
-  /* ---- Derived data --------------------------------------------
+  /* Derived data:
      A Map from ISO day → the ranges covering it, rebuilt only when
      `ranges` changes (useMemo). Most days have one range; a "travel
      day" (one trip ends where the next begins) has two. Storing an
@@ -74,9 +70,8 @@ export default function App() {
     return { start, end };
   }, [selection]);
 
-  /* ---- Toast helper --------------------------------------------
-     Wrapped in useCallback so the function identity is stable and
-     can safely be used inside effects/handlers. */
+  /* Toast helper. Wrapped in useCallback so the function identity is
+     stable and can safely be used inside effects/handlers. */
   const showToast = useCallback((message, type = "info") => {
     setToast({ message, type });
   }, []);
@@ -90,7 +85,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  /* ---- Range CRUD helpers --------------------------------------- */
+  /* Range CRUD helpers */
 
   /**
    * Decide whether a brand-new range [start, end] may be created.
@@ -124,8 +119,7 @@ export default function App() {
     setRanges((prev) => prev.filter((r) => r.id !== id));
   }
 
-  /* ---- Drag-selection logic -------------------------------------
-     The interaction is a tiny state machine:
+  /* Drag-selection logic. The interaction is a tiny state machine:
        idle → (mousedown on any day) → pressing
        pressing → (mouseenter) → extend preview (now a drag)
        pressing → (mouseup, no move) → edit the trip / make a 1-day range
@@ -212,7 +206,7 @@ export default function App() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  /* ---- Dialog callbacks ----------------------------------------- */
+  /* Dialog callbacks */
 
   function closeDialog() {
     setDialog(null);
@@ -249,7 +243,7 @@ export default function App() {
     closeDialog();
   }
 
-  /* ---- Export / Import / Clear ----------------------------------- */
+  /* Export / Import / Clear */
 
   /** Download the current ranges as a JSON file. Standard browser
       trick: wrap the text in a Blob, point a temporary <a download>
@@ -348,15 +342,14 @@ export default function App() {
     }
   }
 
-  /* ---- Render ----------------------------------------------------
-     A hidden <input type="file"> does the real file picking; the
-     visible Import button just forwards its click to it (file
-     inputs are hard to style, this is the standard workaround). */
+  /* Render. A hidden <input type="file"> does the real file picking; the
+     visible Import button just forwards its click to it (file inputs are
+     hard to style, this is the standard workaround). */
   const importInputRef = useRef(null);
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      {/* ---------- Header with title and toolbar ---------- */}
+      {/* Header with title and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Holiday Planner {YEAR}</h1>
@@ -382,7 +375,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* ---------- The two month calendars ---------- */}
+      {/* The two month calendars */}
       <div className="flex flex-wrap gap-6 mb-6">
         {MONTHS.map((monthConfig) => (
           <MonthCard
@@ -400,10 +393,10 @@ export default function App() {
         ))}
       </div>
 
-      {/* ---------- Holiday legend ---------- */}
+      {/* Holiday legend */}
       <HolidayLegend />
 
-      {/* ---------- Overlays (rendered only when needed) ---------- */}
+      {/* Overlays (rendered only when needed) */}
       {dialog && (
         <RangeDialog
           mode={dialog.mode}
