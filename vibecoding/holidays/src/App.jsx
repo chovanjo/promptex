@@ -215,6 +215,7 @@ export default function App() {
     setSelection(null); // also clears the drag preview
   }
 
+  /** Persist the dialog result: append a new range (create) or update the matched one (edit). */
   function handleDialogSave({ label, color }) {
     if (dialog.mode === "create") {
       const { start, end } = dialog.range;
@@ -307,6 +308,7 @@ export default function App() {
     return null; // null = valid
   }
 
+  /** Read the chosen JSON file, validate it, then replace all ranges — or toast an error and keep the current plan. */
   function handleImportFile(event) {
     const file = event.target.files[0];
     if (!file) return;
