@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Holiday Planner — July &amp; August 2026</title>
+
+  <!-- ================================================================
+       EXTERNAL LIBRARIES (loaded from CDN — no build step needed)
+
+       1. Tailwind CSS 4 "browser" build: scans the page for utility
+          classes (like `flex`, `p-4`) and generates the CSS on the fly.
+       2. React + ReactDOM 18 UMD builds: expose the global variables
+          `React` and `ReactDOM`. (React 19 dropped UMD builds, which is
+          why we pin version 18 for this CDN approach.)
+       3. Babel Standalone: compiles the JSX inside our
+          <script type="text/babel"> block right in the browser, so we
+          can write modern React without any tooling.
+
+       NOTE: an internet connection is required to load these.
+       ================================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-800">
+  <!-- React renders the whole application into this single element. -->
+  <div id="root"></div>
+
+  <!-- `type="text/babel"` tells Babel Standalone to compile this script
+       (it contains JSX, which browsers can't run natively). -->
+  <script type="text/babel">
+    "use strict";
+
+    /* We "destructure" the hooks we need from the global React object.
+       In a build-tool project you would write:
+       `import { useState } from "react";` — this is the CDN equivalent. */
+    const { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } = React;
+
+    /* =================================================================
+       SECTION 1 — CONSTANTS
+       Fixed configuration values live at the top so they are easy to
+       find and change. Naming convention: UPPER_SNAKE_CASE.
+       ================================================================= */
+
+    /** The year this planner is built for. */
+    const YEAR = 2026;
+
+    /** The two months we display: July (7) and August (8).
+        We use human-friendly 1-based month numbers everywhere and only
+        convert to JavaScript's 0-based months inside the date helpers.
+
+        `extraWeeksBefore` shows that many additional full weeks BEFORE
+        the month's own first week — July gets one, so the planner also
+        covers Jun 22–28 (holidays often start in late June).
+
+        `hideAfter` / `hideBefore` blank out the filler cells in the
+        Jul 27 – Aug 2 week where the two cards would otherwise show
+        the SAME dates twice: July hides Aug 1–2, August hides
+        Jul 27–31. Every real date appears in exactly one grid. */
+    const MONTHS = [
+      { month: 7, name: "July", extraWeeksBefore: 1, hideAfter: "2026-07-31" },
+      { month: 8, name: "August", extraWeeksBefore: 0, hideBefore: "2026-08-01" },
+    ];
+
+    /** Column headers — the week starts on Monday (European convention). */
+    const WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    /** Czech public holidays that fall inside the displayed date window
+        (Jun 29 – Sep 6, 2026). Keyed by ISO date for O(1) lookup. */
+    const CZ_HOLIDAYS = {
+      "2026-07-05": "Saints Cyril and Methodius Day",
+      "2026-07-06": "Jan Hus Day",
+    };
+
+    /** Suggested labels shown as a dropdown on the label input.
+        These are just suggestions — the user can still type anything. */
+    const PRESET_LABELS = ["Dekýš", "Praha", "Tábor", "Nemšová", "Grécko"];
+
+    /** The 9 pastel colors offered in the dialog — Tailwind's light
+        200-shade background classes. We store the CLASS NAME (not a
+        hex value) in state and in exported JSON, so every color in the
+        app is styled by Tailwind alone, with no inline CSS. All 200
+        shades are light, so dark text is always readable on them. */
+    const PRESET_COLORS = [
+      { cls: "bg-red-200", name: "Red" },
+      { cls: "bg-orange-200", name: "Orange" },
+      { cls: "bg-yellow-200", name: "Yellow" },
+      { cls: "bg-lime-200", name: "Lime" },
+      { cls: "bg-green-200", name: "Green" },
+      { cls: "bg-teal-200", name: "Teal" },
+      { cls: "bg-blue-200", name: "Blue" },
+      { cls: "bg-violet-200", name: "Violet" },
+      { cls: "bg-pink-200", name: "Pink" },
+    ];
+
+    /** Color a brand-new range starts with (pastel blue). */
+    const DEFAULT_COLOR = "bg-blue-200";
+
+    /* =================================================================
+       SECTION 2 — DATE UTILITIES
+       Small *pure* functions (same input → same output, no side
+       effects). Pure helpers are easy to test and reason about.
+
+       Important trick used throughout: we represent days as ISO strings
+       like "2026-07-13". Because the parts are ordered year → month →
+       day with fixed widths, plain string comparison ("<", ">") sorts
+       dates correctly — no Date math needed for comparisons.
+       ================================================================= */
+
+    /** Convert a JavaScript Date to an ISO date string ("2026-07-13").
+        We build it manually from the *local* date parts; using
+        `date.toISOString()` would convert to UTC and could shift the
+        day across midnight depending on the user's timezone. */
+    function toISO(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0"); // 0-based → 1-based
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    /** Return a new Date that is `days` after `date` (negative = before).
+        We never mutate the input — mutation causes subtle bugs. */
+    function addDays(date, days) {
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    /** Day-of-week index in a Monday-based week: Mon=0 … Sun=6.
+        JavaScript's `getDay()` is Sunday-based (Sun=0 … Sat=6), so we
+        shift it with `(getDay() + 6) % 7`. */
+    function mondayIndex(date) {
+      return (date.getDay() + 6) % 7;
+    }
+
+    /** Format an ISO date for humans, e.g. "2026-07-13" → "Jul 13". */
+    function formatShort(iso) {
+      const [y, m, d] = iso.split("-").map(Number);
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${monthNames[m - 1]} ${d}`;
+    }
+
+    /** Number of days in an inclusive ISO range, e.g. Jul 13–17 → 5. */
+    function countDays(startIso, endIso) {
+      const start = new Date(startIso);
+      const end = new Date(endIso);
+      const MS_PER_DAY = 24 * 60 * 60 * 1000;
+      return Math.round((end - start) / MS_PER_DAY) + 1;
+    }
+
+    /** Do two inclusive ranges share at least one day?
+        Classic interval-overlap test: they overlap unless one ends
+        before the other starts. Works on ISO strings directly. */
+    function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+      return aStart <= bEnd && bStart <= aEnd;
+    }
+
+    /**
+     * Classify how two ranges overlap — used to allow "travel days".
+     * The shared part of two inclusive ranges is [maxStart .. minEnd]:
+     *   - maxStart >  minEnd → "none"     (they don't touch)
+     *   - maxStart === minEnd → "boundary" (share EXACTLY one day, which
+     *       is one range's end and the other's start — a travel day)
+     *   - maxStart <  minEnd → "full"     (share two or more days — not
+     *       allowed: you can't be in two places for a whole day)
+     */
+    function overlapKind(aStart, aEnd, bStart, bEnd) {
+      const maxStart = aStart > bStart ? aStart : bStart;
+      const minEnd = aEnd < bEnd ? aEnd : bEnd;
+      if (maxStart > minEnd) return "none";
+      if (maxStart === minEnd) return "boundary";
+      return "full";
+    }
+
+    /** Sort two ISO dates so [start, end] is always in order.
+        Lets the user drag backwards (Jul 17 → Jul 13) and still get
+        a normal range. */
+    function normalizeRange(a, b) {
+      return a <= b ? [a, b] : [b, a];
+    }
+
+    /**
+     * Build the full calendar grid for one month.
+     *
+     * Returns an array of weeks; each week is an array of 7 "day" objects:
+     *   { iso:        "2026-07-13"  — unique id for the day,
+     *     dayNumber:  13            — what to print in the cell,
+     *     inMonth:    true          — false for filler days from the
+     *                                 previous/next month (rendered dimmed),
+     *     isWeekend:  false,
+     *     holiday:    "Jan Hus Day" | null }
+     *
+     * Algorithm: start from the 1st of the month, walk back to the
+     * nearest Monday, then emit complete weeks until we have passed the
+     * last day of the month. This naturally produces the filler days
+     * (e.g. Jun 29–30 before Jul 1, or Sep 1–6 after Aug 31).
+     *
+     * `extraWeeksBefore` (optional) prepends that many additional full
+     * weeks of filler days — used to extend July back into late June.
+     *
+     * `hideBefore` / `hideAfter` (optional ISO dates) mark days outside
+     * that window as `hidden` — the calendar renders them as empty
+     * placeholder cells. Used so the Jul/Aug boundary week is not
+     * shown twice (once per card).
+     */
+    function buildMonthGrid(year, month, { extraWeeksBefore = 0, hideBefore = "", hideAfter = "" } = {}) {
+      const firstOfMonth = new Date(year, month - 1, 1);
+      const lastOfMonth = new Date(year, month, 0); // day 0 of next month = last day of this one
+
+      // Walk back from the 1st to the Monday that starts its week,
+      // then further back by the requested number of extra weeks.
+      let cursor = addDays(firstOfMonth, -mondayIndex(firstOfMonth) - extraWeeksBefore * 7);
+
+      const weeks = [];
+      // Keep emitting weeks until the week we just finished contains the
+      // last day of the month (i.e. the cursor has moved past it).
+      while (cursor <= lastOfMonth) {
+        const week = [];
+        for (let i = 0; i < 7; i++) {
+          const iso = toISO(cursor);
+          week.push({
+            iso,
+            dayNumber: cursor.getDate(),
+            inMonth: cursor.getMonth() === month - 1,
+            isWeekend: mondayIndex(cursor) >= 5, // Sat (5) or Sun (6)
+            holiday: CZ_HOLIDAYS[iso] || null,
+            // Hidden days keep their slot in the grid (so columns stay
+            // aligned) but are rendered as empty placeholder cells.
+            hidden: (hideBefore && iso < hideBefore) || (hideAfter && iso > hideAfter),
+          });
+          cursor = addDays(cursor, 1);
+        }
+        weeks.push(week);
+      }
+      return weeks;
+    }
+
+    /* =================================================================
+       SECTION 3 — SMALL PRESENTATIONAL COMPONENTS
+       Each component does ONE thing and receives everything it needs
+       via props ("props down"). When the user interacts, it calls a
+       callback prop ("callbacks up") — it never changes shared state
+       itself. This one-way data flow is the core React pattern.
+       ================================================================= */
+
+    /**
+     * One day cell in a month grid. It receives the array of ranges
+     * covering this day (0, 1, or — on a travel day — 2):
+     *   - 0 → empty day: white / weekend tint / live drag preview;
+     *   - 1 → painted with that range's color, label on every day;
+     *   - 2 → TRAVEL DAY: split into a top half (the trip you're
+     *         leaving) and a bottom half (the trip you're arriving at).
+     * Empty days start a drag (onStartDrag); occupied days/halves open
+     * the matching range for editing (onEditRange).
+     */
+    function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, isRangeHovered, onStartDrag, onEditRange, onMouseEnter }) {
+      const { iso, dayNumber, inMonth, isWeekend, holiday } = day;
+      const isTravelDay = ranges.length === 2;
+
+      // The little red holiday dot + the day number, shared by every
+      // layout below. Kept in one place so the three branches agree.
+      const holidayDot = holiday && (
+        <span
+          data-testid="holiday-marker"
+          className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500"
+        />
+      );
+
+      // -------- Travel day: two stacked, independently-clickable halves.
+      if (isTravelDay) {
+        // One trip ENDS here (the half you're leaving), the other STARTS
+        // here (the half you're arriving at). Derive each by its boundary.
+        const leaving = ranges.find((r) => r.end === iso) || ranges[0];
+        const arriving = ranges.find((r) => r.start === iso) || ranges[1];
+
+        // A reusable half. onMouseDown edits ITS range. The top half is
+        // padded left so its label clears the floating day number.
+        const Half = ({ range, testid, padForNumber }) => (
+          <div
+            data-testid={testid}
+            onMouseDown={(e) => { e.preventDefault(); onEditRange(range); }}
+            className={`${range.color} text-gray-800 h-1/2 px-1 flex items-center overflow-hidden ${padForNumber ? "pl-6" : ""}`}
+          >
+            <span className="text-[10px] font-semibold leading-none truncate w-full">
+              {range.label}
+            </span>
+          </div>
+        );
+
+        const wrapperClasses = "relative h-14 border border-gray-100 cursor-pointer select-none" +
+          (isRangeHovered ? " ring-2 ring-inset ring-gray-700" : "");
+
+        return (
+          <div
+            data-date={iso}
+            data-testid="travel-day"
+            className={wrapperClasses}
+            title={`${leaving.label} → ${arriving.label}`}
+            onMouseEnter={() => onMouseEnter(iso)}
+          >
+            <Half range={leaving} testid="travel-leaving" padForNumber />
+            <Half range={arriving} testid="travel-arriving" />
+            {/* Day number floats in the top-left over the leaving half. */}
+            <span className="absolute top-0.5 left-1 text-sm text-gray-800">{dayNumber}</span>
+            {holidayDot}
+          </div>
+        );
+      }
+
+      // -------- Empty day or single range.
+      const range = ranges[0] || null;
+      // Cursor signals what a click does: occupied days edit (pointer),
+      // free days start a selection (cell — the spreadsheet "select"
+      // cursor). The right one is added per-branch below.
+      const classes = ["relative h-14 p-1 text-sm border border-gray-100",
+                       "select-none transition-colors"];
+
+      if (range) {
+        // Saved range: paint with its pastel background class. All the
+        // pastels are light, so dark text is always readable on them.
+        classes.push(range.color, "text-gray-800", "cursor-pointer");
+        // Round the outer corners so each range reads as one "pill" per row.
+        if (iso === range.start) classes.push("rounded-l-lg");
+        if (iso === range.end) classes.push("rounded-r-lg");
+        // If the live drag is reaching onto this existing day (it will
+        // become the shared travel day), ring it so the user can see it's
+        // included — without hiding the trip that's already here.
+        if (isSelected) classes.push("ring-2 ring-inset ring-blue-500");
+      } else if (isSelected) {
+        // Live preview while dragging — a strong blue that forms one
+        // continuous pill (rounded only at the selection's two ends).
+        classes.push("cursor-cell bg-blue-300 ring-2 ring-inset ring-blue-500 text-blue-900");
+        if (isSelectionStart) classes.push("rounded-l-lg");
+        if (isSelectionEnd) classes.push("rounded-r-lg");
+      } else if (isWeekend) {
+        classes.push("cursor-cell bg-gray-50 hover:bg-blue-50");
+      } else {
+        classes.push("cursor-cell bg-white hover:bg-blue-50");
+      }
+
+      if (!inMonth && !range) classes.push("text-gray-400"); // dim filler days
+      if (isRangeHovered) classes.push("ring-2 ring-inset ring-gray-700");
+
+      return (
+        <div
+          data-date={iso}
+          className={classes.join(" ")}
+          title={range ? range.label : ""}
+          onMouseDown={(e) => {
+            e.preventDefault(); // stop the browser from text-selecting while we drag
+            // Begin a selection anchored here — on a free day OR on an
+            // existing trip's day (so you can drag outward from a trip's
+            // edge to start an overlapping range). Whether this turns into
+            // an edit (plain click) or a new range (a drag) is decided on
+            // mouseup; see handleMouseUp.
+            onStartDrag(iso);
+          }}
+          onMouseEnter={() => onMouseEnter(iso)}
+        >
+          <span className={holiday && !range ? "font-bold text-red-600" : ""}>
+            {dayNumber}
+          </span>
+          {holidayDot}
+          {range && (
+            <div data-testid="range-label" className="text-xs font-semibold truncate">
+              {range.label}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /**
+     * One month: title, weekday header row, and the day grid.
+     * The grid itself is just CSS Grid with 7 columns — each week from
+     * `buildMonthGrid` flows naturally into one row.
+     */
+    function MonthCard({ name, month, gridOptions, dayToRanges, selectionSet, selectionBounds, hoveredRangeId, onStartDrag, onEditRange, onDayMouseEnter }) {
+      // useMemo caches the computed grid: the calendar for July 2026
+      // never changes, so there is no reason to rebuild it on every render.
+      const weeks = useMemo(
+        () => buildMonthGrid(YEAR, month, gridOptions),
+        [month, gridOptions]
+      );
+
+      return (
+        <section
+          data-testid={`month-${name.toLowerCase()}`}
+          className="bg-white rounded-xl shadow p-4 flex-1 min-w-[320px]"
+        >
+          <h2 className="text-lg font-bold text-center mb-3">{name} {YEAR}</h2>
+
+          {/* Weekday headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {WEEKDAY_NAMES.map((dayName) => (
+              // `key` lets React track list items between renders.
+              <div key={dayName} className="text-center text-xs font-semibold text-gray-500 py-1">
+                {dayName}
+              </div>
+            ))}
+          </div>
+
+          {/* Day cells: `weeks.flat()` turns [[7 days], [7 days], …]
+              into one flat list that fills the 7-column grid row by row.
+              Hidden days (the Jul/Aug boundary dates owned by the OTHER
+              card) render as empty placeholders that keep their column. */}
+          <div className="grid grid-cols-7">
+            {weeks.flat().map((day) => {
+              if (day.hidden) {
+                return <div key={day.iso} data-testid="blank-day" className="h-14" />;
+              }
+              const dayRanges = dayToRanges.get(day.iso) || [];
+              return (
+                <DayCell
+                  key={day.iso}
+                  day={day}
+                  ranges={dayRanges}
+                  isSelected={selectionSet.has(day.iso)}
+                  isSelectionStart={!!selectionBounds && day.iso === selectionBounds.start}
+                  isSelectionEnd={!!selectionBounds && day.iso === selectionBounds.end}
+                  isRangeHovered={hoveredRangeId !== null && dayRanges.some((r) => r.id === hoveredRangeId)}
+                  onStartDrag={onStartDrag}
+                  onEditRange={onEditRange}
+                  onMouseEnter={onDayMouseEnter}
+                />
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
+    /** Strip accents so filtering is diacritics-insensitive: typing
+        "ta" should find "Tábor". `normalize("NFD")` splits each
+        accented letter into base letter + combining accent mark, and
+        the regex removes those marks (Unicode range U+0300–U+036F). */
+    function stripDiacritics(text) {
+      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    /**
+     * A "combobox": a text input combined with a styled dropdown of
+     * suggestions. Unlike a native <select>, the user can still type
+     * any custom text — and unlike a native <datalist>, we fully
+     * control how the dropdown looks (it is just a styled <ul>).
+     *
+     * The text value lives in the parent (RangeDialog) — this is a
+     * "controlled component": we receive `value` and report every
+     * change through `onChange`. Only UI state nobody else cares
+     * about (panel open/closed, which row is highlighted) stays local.
+     */
+    function LabelCombobox({ value, onChange, options, placeholder }) {
+      const [open, setOpen] = useState(false);
+      const [highlighted, setHighlighted] = useState(-1); // -1 = no row highlighted
+      // Filtering only makes sense WHILE the user is typing. When the
+      // panel is reopened over an already-selected value (click,
+      // chevron, edit mode), all options must show — otherwise picking
+      // "Praha" would forever filter the list down to just "Praha".
+      const [typedSinceOpen, setTypedSinceOpen] = useState(false);
+      const inputRef = useRef(null);
+      const wrapperRef = useRef(null);
+
+      /** Open the panel showing the FULL list (no filter yet). */
+      function openUnfiltered() {
+        setOpen(true);
+        setTypedSinceOpen(false);
+        setHighlighted(-1);
+      }
+
+      // Focus the input as soon as the dialog opens, so the user can
+      // type immediately. (Programmatic focus does NOT open the panel —
+      // it opens on click, typing, ArrowDown or the chevron.)
+      useEffect(() => {
+        inputRef.current.focus();
+      }, []);
+
+      // While typing, show only the options matching the text (case-
+      // and accent-insensitive); when nothing matches, the panel
+      // disappears. When the panel was merely (re)opened — not typed
+      // into — show the complete list regardless of the current value.
+      const query = stripDiacritics(value.trim().toLowerCase());
+      const visibleOptions = typedSinceOpen
+        ? options.filter((option) => stripDiacritics(option.toLowerCase()).includes(query))
+        : options;
+      const panelVisible = open && visibleOptions.length > 0;
+
+      // Pressing the mouse anywhere outside the combobox (Save button,
+      // dialog background, …) closes the panel.
+      useEffect(() => {
+        function handleOutsideMouseDown(e) {
+          if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+            setOpen(false);
+          }
+        }
+        document.addEventListener("mousedown", handleOutsideMouseDown);
+        return () => document.removeEventListener("mousedown", handleOutsideMouseDown);
+      }, []);
+
+      /** Put the chosen option into the input and close the panel. */
+      function pick(option) {
+        onChange(option);
+        setOpen(false);
+        setTypedSinceOpen(false); // next open shows the full list again
+        setHighlighted(-1);
+        inputRef.current.focus(); // typing must stay possible after picking
+      }
+
+      /** Keyboard support. When the panel "consumes" a key we call
+          stopPropagation so the same keypress doesn't ALSO reach the
+          dialog (Enter would save it, Escape would cancel it). */
+      function handleKeyDown(e) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault(); // don't move the text cursor
+          if (!open) {
+            openUnfiltered(); // closed panel: ArrowDown opens the full list
+          }
+          setHighlighted((prev) => Math.min(prev + 1, visibleOptions.length - 1));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setHighlighted((prev) => Math.max(prev - 1, 0));
+        } else if (e.key === "Enter" && panelVisible && highlighted >= 0) {
+          e.stopPropagation(); // pick the row, do NOT save the dialog yet
+          pick(visibleOptions[highlighted]);
+        } else if (e.key === "Escape" && panelVisible) {
+          e.stopPropagation(); // close the panel, do NOT cancel the dialog
+          setOpen(false);
+        }
+      }
+
+      return (
+        /* `relative` wrapper + `absolute` panel = the standard CSS
+           pattern for dropdowns: the panel is positioned against the
+           wrapper and floats over whatever comes below (z-10). */
+        <div ref={wrapperRef} className="relative mb-4" onKeyDown={handleKeyDown}>
+          <input
+            id="range-label-input"
+            data-testid="label-input"
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setOpen(true);
+              setTypedSinceOpen(true); // typing → filter the list
+              setHighlighted(-1);
+            }}
+            onClick={openUnfiltered}
+            placeholder={placeholder}
+            autoComplete="off"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-9 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          {/* Chevron that toggles the panel by hand. */}
+          <button
+            type="button"
+            data-testid="label-dropdown-toggle"
+            aria-label="Show suggestions"
+            onMouseDown={(e) => e.preventDefault()} // don't steal focus from the input
+            onClick={() => (open ? setOpen(false) : openUnfiltered())}
+            className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600 text-xs"
+          >
+            ▼
+          </button>
+
+          {panelVisible && (
+            <ul
+              data-testid="label-options"
+              className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-auto py-1"
+            >
+              {visibleOptions.map((option, index) => (
+                <li
+                  key={option}
+                  data-testid="label-option"
+                  /* onMouseDown (not onClick) so picking the row wins
+                     over the outside-mousedown handler and input blur. */
+                  onMouseDown={(e) => { e.preventDefault(); pick(option); }}
+                  onMouseEnter={() => setHighlighted(index)}
+                  className={"px-3 py-2 cursor-pointer text-sm " +
+                    (index === highlighted ? "bg-blue-100" : "hover:bg-blue-50")}
+                >
+                  {option}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /**
+     * The dialog for naming and coloring a range.
+     * Used in two modes:
+     *   - "create": after the user finishes a drag selection
+     *   - "edit":   after clicking an existing range (adds a Delete button)
+     *
+     * It keeps its own *local* state for the form fields and only
+     * reports the final result via onSave / onDelete / onCancel.
+     * Local state for form inputs is a common React pattern: the rest
+     * of the app does not care about every keystroke.
+     */
+    function RangeDialog({ mode, start, end, initialLabel, initialColor, onSave, onDelete, onCancel }) {
+      const [label, setLabel] = useState(initialLabel);
+      const [color, setColor] = useState(initialColor);
+
+      /** Save on Enter, cancel on Escape — small keyboard niceties.
+          (The combobox consumes these keys first when its dropdown is
+          open, so they only reach this handler when it is closed.) */
+      function handleKeyDown(e) {
+        if (e.key === "Enter") handleSave();
+        if (e.key === "Escape") onCancel();
+      }
+
+      function handleSave() {
+        // `trim()` so a label of only spaces doesn't count; fall back
+        // to a default name instead of blocking the save.
+        onSave({ label: label.trim() || "Holiday", color });
+      }
+
+      return (
+        /* Fixed overlay that dims the page; clicking it cancels.
+           `e.target === e.currentTarget` makes sure we only cancel when
+           the dim background itself was clicked — not the white card
+           (clicks inside the card "bubble" up to this handler too). */
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+        >
+          <div data-testid="range-dialog" className="bg-white rounded-xl shadow-xl p-6 w-80" onKeyDown={handleKeyDown}>
+            <h3 className="font-bold text-lg mb-1">
+              {mode === "create" ? "New range" : "Edit range"}
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {formatShort(start)} – {formatShort(end)} · {countDays(start, end)} day{countDays(start, end) > 1 ? "s" : ""}
+            </p>
+
+            {/* Label: a combobox — suggestions in a styled dropdown,
+                free custom text still allowed. */}
+            <label className="block text-sm font-medium mb-1" htmlFor="range-label-input">Label</label>
+            <LabelCombobox
+              value={label}
+              onChange={setLabel}
+              options={PRESET_LABELS}
+              placeholder="Choose or type a label…"
+            />
+
+            {/* Color picker: the 9 pastel presets, nothing else. */}
+            <span className="block text-sm font-medium mb-1">Color</span>
+            <div className="flex items-center gap-2 mb-5 flex-wrap">
+              {PRESET_COLORS.map((preset) => (
+                <button
+                  key={preset.cls}
+                  type="button"
+                  data-testid={`color-${preset.name.toLowerCase()}`}
+                  title={preset.name}
+                  onClick={() => setColor(preset.cls)}
+                  /* The swatch itself is colored by the same Tailwind
+                     class the range will use; the currently selected
+                     one gets a dark ring. */
+                  className={`${preset.cls} w-7 h-7 rounded-full border border-gray-200 transition-transform hover:scale-110 ` +
+                    (color === preset.cls ? "ring-2 ring-offset-2 ring-gray-700" : "")}
+                />
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                data-testid="save-btn"
+                onClick={handleSave}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2"
+              >
+                Save
+              </button>
+              {mode === "edit" && (
+                <button
+                  type="button"
+                  data-testid="delete-btn"
+                  onClick={onDelete}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg px-4 py-2"
+                >
+                  Delete
+                </button>
+              )}
+              <button
+                type="button"
+                data-testid="cancel-btn"
+                onClick={onCancel}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg px-4 py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /**
+     * The list of all saved ranges under the calendars.
+     * Hovering a row highlights the matching days in the calendar
+     * (reported up via onHoverRange), which helps users connect the
+     * list entry with its place in the calendar.
+     */
+    function RangeList({ ranges, onEdit, onDelete, onHoverRange }) {
+      if (ranges.length === 0) {
+        return (
+          <p data-testid="empty-hint" className="text-center text-gray-400 text-sm py-4">
+            No ranges yet — drag across days in the calendar to plan your first holiday.
+          </p>
+        );
+      }
+
+      // Show ranges in date order, not creation order. `toSorted` would
+      // be nicer but `[...ranges].sort` works in every browser:
+      // we copy first because `.sort()` mutates, and props must never
+      // be mutated.
+      const sorted = [...ranges].sort((a, b) => a.start.localeCompare(b.start));
+
+      return (
+        <ul data-testid="range-list" className="divide-y divide-gray-100">
+          {sorted.map((range) => (
+            <li
+              key={range.id}
+              data-testid="range-item"
+              className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 rounded"
+              onMouseEnter={() => onHoverRange(range.id)}
+              onMouseLeave={() => onHoverRange(null)}
+            >
+              <span className={`${range.color} w-4 h-4 rounded-full shrink-0`} />
+              <span className="font-medium flex-1 truncate">{range.label}</span>
+              <span className="text-sm text-gray-500 whitespace-nowrap">
+                {formatShort(range.start)} – {formatShort(range.end)} · {countDays(range.start, range.end)}d
+              </span>
+              <button
+                type="button"
+                data-testid="edit-range-btn"
+                onClick={() => onEdit(range)}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                data-testid="delete-range-btn"
+                onClick={() => onDelete(range.id)}
+                className="text-sm text-red-600 hover:underline"
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    /**
+     * Legend explaining the red holiday markers in the calendars.
+     * Built straight from the CZ_HOLIDAYS constant — add a holiday
+     * there and it automatically appears here too (single source of
+     * truth: the data lives in one place, the UI just reflects it).
+     */
+    function HolidayLegend() {
+      // Object.entries turns { "2026-07-05": "…" } into [iso, name]
+      // pairs we can map over. Object keys keep insertion order, so the
+      // holidays appear in date order as long as the constant is sorted.
+      const holidays = Object.entries(CZ_HOLIDAYS);
+      return (
+        <div data-testid="holiday-legend" className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-600 mb-6 px-1">
+          <span className="font-semibold">Public holidays (CZ):</span>
+          {holidays.map(([iso, name]) => (
+            <span key={iso} className="flex items-center gap-1.5">
+              {/* Same red dot as in the day cells, so the connection is obvious. */}
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              {formatShort(iso)} — {name}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    /** A small notification that appears at the bottom of the screen
+        (e.g. "Ranges cannot overlap") and disappears by itself —
+        the auto-dismiss timer lives in App. */
+    function Toast({ toast }) {
+      if (!toast) return null;
+      const colorClass = toast.type === "error" ? "bg-red-600" : "bg-gray-800";
+      return (
+        <div
+          data-testid="toast"
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 ${colorClass} text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50`}
+        >
+          {toast.message}
+        </div>
+      );
+    }
+
+    /** A floating badge shown at the top while a drag is in progress,
+        telling the user exactly what they're selecting (e.g.
+        "Jul 13 – Jul 17 · 5 days"). Mirrors <Toast> but lives at the top
+        so it never sits under the cursor. */
+    function SelectionBadge({ bounds }) {
+      if (!bounds) return null;
+      const days = countDays(bounds.start, bounds.end);
+      return (
+        <div
+          data-testid="selection-badge"
+          className="fixed top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50"
+        >
+          {formatShort(bounds.start)} – {formatShort(bounds.end)} · {days} day{days > 1 ? "s" : ""}
+        </div>
+      );
+    }
+
+    /* =================================================================
+       SECTION 4 — THE MAIN <App /> COMPONENT
+       This is the single "owner" of all shared state. Keeping state in
+       one place ("lifting state up") means every part of the UI always
+       shows the same data.
+       ================================================================= */
+
+    function App() {
+      /* ---- State ---------------------------------------------------
+         ranges:    the saved holiday ranges (the app's core data)
+         selection: { anchor, hover } while a drag is in progress, else null
+         dialog:    config of the open dialog, else null
+         toast:     { message, type } for the notification, else null
+         hoveredRangeId: range highlighted from the list, else null     */
+      const [ranges, setRanges] = useState([]);
+      const [selection, setSelection] = useState(null);
+      const [dialog, setDialog] = useState(null);
+      const [toast, setToast] = useState(null);
+      const [hoveredRangeId, setHoveredRangeId] = useState(null);
+
+      /* ---- Derived data --------------------------------------------
+         A Map from ISO day → the ranges covering it, rebuilt only when
+         `ranges` changes (useMemo). Most days have one range; a "travel
+         day" (one trip ends where the next begins) has two. Storing an
+         ARRAY per day keeps that case uniform. O(1) lookups while
+         rendering ~80 cells, instead of scanning `ranges` per cell. */
+      const dayToRanges = useMemo(() => {
+        const map = new Map();
+        for (const range of ranges) {
+          let cursor = new Date(range.start);
+          const last = new Date(range.end);
+          while (cursor <= last) {
+            const iso = toISO(cursor);
+            if (!map.has(iso)) map.set(iso, []);
+            map.get(iso).push(range);
+            cursor = addDays(cursor, 1);
+          }
+        }
+        return map;
+      }, [ranges]);
+
+      /* The days covered by the in-progress drag, as a Set for O(1)
+         "is this day selected?" checks in DayCell. */
+      const selectionSet = useMemo(() => {
+        const set = new Set();
+        if (selection) {
+          const [start, end] = normalizeRange(selection.anchor, selection.hover);
+          let cursor = new Date(start);
+          const last = new Date(end);
+          while (cursor <= last) {
+            set.add(toISO(cursor));
+            cursor = addDays(cursor, 1);
+          }
+        }
+        return set;
+      }, [selection]);
+
+      /* The drag's normalized [start, end] (or null), used to round the
+         preview's two ends and to fill the live selection badge. */
+      const selectionBounds = useMemo(() => {
+        if (!selection) return null;
+        const [start, end] = normalizeRange(selection.anchor, selection.hover);
+        return { start, end };
+      }, [selection]);
+
+      /* ---- Toast helper --------------------------------------------
+         Wrapped in useCallback so the function identity is stable and
+         can safely be used inside effects/handlers. */
+      const showToast = useCallback((message, type = "info") => {
+        setToast({ message, type });
+      }, []);
+
+      // Auto-dismiss the toast 2.5s after it appears. Returning a
+      // cleanup function cancels the timer if a new toast replaces the
+      // old one early — otherwise the old timer would hide the new toast.
+      useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(null), 2500);
+        return () => clearTimeout(timer);
+      }, [toast]);
+
+      /* ---- Range CRUD helpers --------------------------------------- */
+
+      /**
+       * Decide whether a brand-new range [start, end] may be created.
+       * Returns null if it's fine, otherwise an error message.
+       * Rules:
+       *   - a "full" overlap (2+ shared days) with any range → rejected;
+       *   - a "boundary" overlap (1 shared day) is allowed — that's a
+       *     travel day — UNLESS it would put a THIRD range on that day
+       *     (a day can hold at most two trips: one leaving, one arriving).
+       */
+      function validateNewRange(start, end) {
+        for (const r of ranges) {
+          if (overlapKind(start, end, r.start, r.end) === "full") {
+            return `Overlaps "${r.label}" — ranges cannot overlap.`;
+          }
+        }
+        // Count how many existing ranges already touch each boundary day
+        // of the candidate; with the candidate itself that must stay ≤ 2.
+        for (const day of [start, end]) {
+          const alreadyThere = dayToRanges.get(day)?.length || 0;
+          if (alreadyThere >= 2) {
+            return "A day can hold at most two trips.";
+          }
+        }
+        return null;
+      }
+
+      function deleteRange(id) {
+        // Functional update (prev => …) always works on the latest
+        // state, even if several updates happen in the same tick.
+        setRanges((prev) => prev.filter((r) => r.id !== id));
+      }
+
+      /* ---- Drag-selection logic -------------------------------------
+         The interaction is a tiny state machine:
+           idle → (mousedown on any day) → pressing
+           pressing → (mouseenter) → extend preview (now a drag)
+           pressing → (mouseup, no move) → edit the trip / make a 1-day range
+           pressing → (mouseup, moved) → open create dialog OR reject overlap
+           any → (Escape) → back to idle                                 */
+
+      /** Begin a selection anchored at `iso`. Works on free days AND on
+          an existing trip's days, so you can drag outward from a trip's
+          edge to start an overlapping (travel-day) range. A press that
+          doesn't move is treated as a click on mouseup (see below). */
+      function handleStartDrag(iso) {
+        if (dialog) return; // ignore clicks while a dialog is open
+        setSelection({ anchor: iso, hover: iso });
+      }
+
+      /** Open a saved range for editing. On a travel day the user clicks
+          the specific half (leaving/arriving), so the right range opens. */
+      function handleEditRange(range) {
+        if (dialog) return;
+        setDialog({ mode: "edit", range });
+      }
+
+      function handleDayMouseEnter(iso) {
+        // Only extend the preview while a drag is actually in progress.
+        // Functional update keeps `anchor` and replaces only `hover`.
+        setSelection((prev) => (prev ? { ...prev, hover: iso } : prev));
+      }
+
+      /* Finishing the drag must work even when the mouse button is
+         released OUTSIDE a day cell (e.g. over the page background),
+         so we listen on `document`, not on the cells.
+
+         The effect re-subscribes whenever `selection` changes, so the
+         handler always sees the current selection — and the returned
+         cleanup removes the old listener first (no duplicates, no leaks).
+
+         Why useLayoutEffect and not useEffect? useEffect runs *after*
+         the browser paints, so on a very fast click the mouseup could
+         fire before we subscribe and the selection would never be
+         finalized. useLayoutEffect runs synchronously right after the
+         mousedown re-render, closing that gap. */
+      useLayoutEffect(() => {
+        // Subscribe only during an actual drag. Once the dialog opens we
+        // keep `selection` for the preview, but the drag itself is over —
+        // without the `dialog` check, releasing the mouse inside the
+        // dialog would re-trigger this handler and re-open the dialog.
+        if (!selection || dialog) return;
+
+        function handleMouseUp() {
+          const [start, end] = normalizeRange(selection.anchor, selection.hover);
+          // A press that never moved to another day is a *click*, not a
+          // drag: on an existing trip it opens that trip for editing; on
+          // a free day it falls through to create a one-day range.
+          if (start === end) {
+            const here = dayToRanges.get(start) || [];
+            if (here.length === 1) {
+              setDialog({ mode: "edit", range: here[0] });
+              setSelection(null);
+              return;
+            }
+          }
+          const error = validateNewRange(start, end);
+          if (error) {
+            showToast(error, "error");
+            setSelection(null);
+          } else {
+            // Keep `selection` set so the preview stays highlighted
+            // behind the dialog; it is cleared when the dialog closes.
+            setDialog({ mode: "create", range: { start, end } });
+          }
+        }
+
+        document.addEventListener("mouseup", handleMouseUp);
+        return () => document.removeEventListener("mouseup", handleMouseUp);
+      }, [selection, dialog, ranges]); // `ranges` too: validateNewRange reads it
+
+      // Escape cancels an in-progress drag (the dialog handles its own
+      // Escape key itself).
+      useEffect(() => {
+        function handleKeyDown(e) {
+          if (e.key === "Escape") setSelection(null);
+        }
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+      }, []);
+
+      /* ---- Dialog callbacks ----------------------------------------- */
+
+      function closeDialog() {
+        setDialog(null);
+        setSelection(null); // also clears the drag preview
+      }
+
+      function handleDialogSave({ label, color }) {
+        if (dialog.mode === "create") {
+          const { start, end } = dialog.range;
+          const newRange = {
+            // crypto.randomUUID() generates a unique id — using array
+            // indexes as ids breaks when items are deleted or reordered.
+            id: crypto.randomUUID(),
+            start,
+            end,
+            label,
+            color,
+          };
+          setRanges((prev) => [...prev, newRange]);
+        } else {
+          // Edit mode: replace the matching range with an updated copy.
+          // We map to a NEW array with a NEW object — React detects
+          // changes by comparing references, so mutating in place
+          // would not trigger a re-render.
+          setRanges((prev) =>
+            prev.map((r) => (r.id === dialog.range.id ? { ...r, label, color } : r))
+          );
+        }
+        closeDialog();
+      }
+
+      function handleDialogDelete() {
+        deleteRange(dialog.range.id);
+        closeDialog();
+      }
+
+      /* ---- Export / Import / Clear ----------------------------------- */
+
+      /** Download the current ranges as a JSON file. Standard browser
+          trick: wrap the text in a Blob, point a temporary <a download>
+          at it, click it programmatically, then free the URL. */
+      function handleExport() {
+        const json = JSON.stringify({ ranges }, null, 2); // `2` = pretty-print
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `holidays-${YEAR}.json`;
+        link.click();
+        URL.revokeObjectURL(url); // release the memory the Blob URL holds
+      }
+
+      /** Validate imported data before trusting it. Never assume a
+          user-supplied file has the right shape — check everything and
+          reject with a clear message if anything is off. */
+      function validateImportedRanges(data) {
+        if (!data || !Array.isArray(data.ranges)) {
+          return "File must contain a { ranges: [...] } object.";
+        }
+        const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
+        // Colors are Tailwind background classes like "bg-blue-200" —
+        // anything else would silently render as an unstyled range.
+        const colorPattern = /^bg-[a-z]+-\d{2,3}$/;
+        for (const r of data.ranges) {
+          if (typeof r.label !== "string" ||
+              !isoPattern.test(r.start || "") || !isoPattern.test(r.end || "")) {
+            return "Each range needs label, color, start and end (YYYY-MM-DD).";
+          }
+          if (!colorPattern.test(r.color || "")) {
+            return `Range "${r.label}" has an invalid color — expected a Tailwind class like "bg-blue-200".`;
+          }
+          if (r.start > r.end) return `Range "${r.label}" ends before it starts.`;
+        }
+        // Reject true (multi-day) overlaps — a single shared boundary
+        // day is allowed because that's a travel day.
+        for (let i = 0; i < data.ranges.length; i++) {
+          for (let j = i + 1; j < data.ranges.length; j++) {
+            const a = data.ranges[i], b = data.ranges[j];
+            if (overlapKind(a.start, a.end, b.start, b.end) === "full") {
+              return `Ranges "${a.label}" and "${b.label}" overlap.`;
+            }
+          }
+        }
+        // No day may hold more than two trips (one leaving, one arriving).
+        const perDay = {};
+        for (const r of data.ranges) {
+          let cursor = new Date(r.start);
+          const last = new Date(r.end);
+          while (cursor <= last) {
+            const iso = toISO(cursor);
+            perDay[iso] = (perDay[iso] || 0) + 1;
+            if (perDay[iso] > 2) return `More than two trips share ${formatShort(iso)}.`;
+            cursor = addDays(cursor, 1);
+          }
+        }
+        return null; // null = valid
+      }
+
+      function handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        // FileReader reads the chosen file in the browser — the file
+        // never leaves the user's computer.
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+            const error = validateImportedRanges(data);
+            if (error) {
+              showToast(`Import failed: ${error}`, "error");
+              return; // keep the current state untouched
+            }
+            // Regenerate ids so imported ranges can't collide with
+            // existing ids from a previous session.
+            setRanges(data.ranges.map((r) => ({ ...r, id: crypto.randomUUID() })));
+            showToast(`Imported ${data.ranges.length} range(s).`);
+          } catch {
+            showToast("Import failed: not a valid JSON file.", "error");
+          }
+        };
+        reader.readAsText(file);
+        // Reset the input so choosing the SAME file again still fires
+        // the change event next time.
+        event.target.value = "";
+      }
+
+      function handleClearAll() {
+        // window.confirm is a simple built-in guard for destructive
+        // actions — fine for a small app like this one.
+        if (window.confirm("Remove all ranges?")) {
+          setRanges([]);
+          showToast("All ranges cleared.");
+        }
+      }
+
+      /* ---- Render ----------------------------------------------------
+         A hidden <input type="file"> does the real file picking; the
+         visible Import button just forwards its click to it (file
+         inputs are hard to style, this is the standard workaround). */
+      const importInputRef = useRef(null);
+
+      return (
+        <div className="max-w-5xl mx-auto p-6">
+          {/* ---------- Header with title and toolbar ---------- */}
+          <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold">Holiday Planner {YEAR}</h1>
+              <p className="text-sm text-gray-500">
+                Drag across days to create a range · click a range to edit it · drag onto a trip's edge for a travel day
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" data-testid="export-btn" onClick={handleExport}
+                className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm font-medium">
+                Export JSON
+              </button>
+              <button type="button" data-testid="import-btn" onClick={() => importInputRef.current.click()}
+                className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm font-medium">
+                Import JSON
+              </button>
+              <input ref={importInputRef} data-testid="import-input" type="file"
+                accept=".json,application/json" onChange={handleImportFile} className="hidden" />
+              <button type="button" data-testid="clear-btn" onClick={handleClearAll}
+                className="bg-white border border-gray-300 hover:bg-red-50 text-red-600 rounded-lg px-4 py-2 text-sm font-medium">
+                Clear all
+              </button>
+            </div>
+          </header>
+
+          {/* ---------- The two month calendars ---------- */}
+          <div className="flex flex-wrap gap-6 mb-6">
+            {MONTHS.map((monthConfig) => (
+              <MonthCard
+                key={monthConfig.month}
+                name={monthConfig.name}
+                month={monthConfig.month}
+                gridOptions={monthConfig}
+                dayToRanges={dayToRanges}
+                selectionSet={selectionSet}
+                selectionBounds={selectionBounds}
+                hoveredRangeId={hoveredRangeId}
+                onStartDrag={handleStartDrag}
+                onEditRange={handleEditRange}
+                onDayMouseEnter={handleDayMouseEnter}
+              />
+            ))}
+          </div>
+
+          {/* ---------- Holiday legend ---------- */}
+          <HolidayLegend />
+
+          {/* ---------- Saved ranges ---------- */}
+          <section className="bg-white rounded-xl shadow p-4">
+            <h2 className="text-lg font-bold mb-2">Planned ranges</h2>
+            <RangeList
+              ranges={ranges}
+              onEdit={(range) => setDialog({ mode: "edit", range })}
+              onDelete={deleteRange}
+              onHoverRange={setHoveredRangeId}
+            />
+          </section>
+
+          {/* ---------- Overlays (rendered only when needed) ---------- */}
+          {dialog && (
+            <RangeDialog
+              mode={dialog.mode}
+              start={dialog.range.start}
+              end={dialog.range.end}
+              initialLabel={dialog.mode === "edit" ? dialog.range.label : ""}
+              initialColor={dialog.mode === "edit" ? dialog.range.color : DEFAULT_COLOR}
+              onSave={handleDialogSave}
+              onDelete={handleDialogDelete}
+              onCancel={closeDialog}
+            />
+          )}
+          <Toast toast={toast} />
+          <SelectionBadge bounds={selectionBounds} />
+        </div>
+      );
+    }
+
+    /* =================================================================
+       SECTION 5 — MOUNT THE APP
+       createRoot is the React 18 way to attach a component tree to a
+       DOM element. From here on, React owns everything inside #root.
+       ================================================================= */
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

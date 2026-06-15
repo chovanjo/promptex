@@ -1,0 +1,16 @@
+{
+  "name": "holidays",
+  "version": "1.0.0",
+  "description": "Holiday planner for July & August 2026 — single-file React app with Playwright tests",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

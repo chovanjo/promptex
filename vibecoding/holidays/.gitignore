@@ -1,0 +1,6 @@
+# Dependencies installed by npm (recreate with `npm install`)
+node_modules/
+
+# Playwright output folders (recreated on every test run)
+test-results/
+playwright-report/
