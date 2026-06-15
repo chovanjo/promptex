@@ -5,25 +5,22 @@
 // feature area. Every test starts from a fresh, empty app (beforeEach),
 // so tests never depend on each other and can run in parallel.
 // =====================================================================
-const { test, expect } = require("@playwright/test");
-const path = require("path");
-const fs = require("fs");
+import { test, expect } from "@playwright/test";
+import fs from "node:fs";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-/** file:// URL of the app — no web server needed for a static page.
-    `pathToFileURL` handles Windows paths (backslashes, drive letters). */
-const APP_URL = require("url").pathToFileURL(path.join(__dirname, "..", "index.html")).href;
-
 /**
  * Open the app and wait until React has actually rendered.
- * (Babel compiles the JSX in the browser, so there is a short moment
- * where the page is loaded but still empty.)
+ * Vite serves the compiled modules from the dev server (started
+ * automatically by Playwright — see `webServer` in the config); the
+ * base URL is set there, so we navigate to "/". There is still a
+ * short moment where the page is loaded but React has not mounted yet.
  */
 async function openApp(page) {
-  await page.goto(APP_URL);
+  await page.goto("/");
   await expect(page.getByTestId("month-july")).toBeVisible();
 }
 

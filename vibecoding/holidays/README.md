@@ -1,9 +1,10 @@
 # Holiday Planner 2026
 
-A single-file holiday planner for **July & August 2026**: drag across days to
-create labelled, colour-coded trips, and mark "travel days" where one trip
-ends as the next begins. Built as one `index.html` with **React 18** +
-**Tailwind CSS 4** + **Babel Standalone**, all from CDN — **no build step**.
+A holiday planner for **July & August 2026**: drag across days to create
+labelled, colour-coded trips, and mark "travel days" where one trip ends as the
+next begins. Built with **Vite** + **React 19** + **Tailwind CSS 4** — JSX and
+Tailwind are compiled ahead of time, so there are no CDN scripts and nothing is
+compiled in the browser.
 
 > This file is the project's source of truth for anyone (human or AI assistant)
 > picking it up. It describes what the app does, how it's built, and the
@@ -13,30 +14,38 @@ ends as the next begins. Built as one `index.html` with **React 18** +
 
 ## Run it
 
-- **App:** open `index.html` in any modern browser. That's all.
-- **Internet is required** — React, Tailwind and Babel load from CDNs at runtime
-  (also true when running the tests).
-- **Tests** (Playwright, 74 e2e tests):
+```bash
+npm install                 # React, Vite, Tailwind, Playwright
+npm run dev                 # start the dev server, then open the printed URL
+npm run build               # production build into dist/
+npm run preview             # serve the production build locally
+```
+
+- **Tests** (Playwright, 74 e2e tests). Playwright starts the Vite dev server
+  itself, so no separate step is needed:
   ```bash
-  npm install                 # installs @playwright/test
-  npx playwright install chromium
-  npm test                    # headless
-  npm run test:headed         # watch it drive a real browser
-  npm run test:report         # open the HTML report of the last run
+  npx playwright install chromium   # once
+  npm test                          # headless
+  npm run test:headed               # watch it drive a real browser
+  npm run test:report               # open the HTML report of the last run
   ```
 
 ---
 
 ## Tech & constraints
 
-- **One file:** all app code lives in `index.html` inside a
-  `<script type="text/babel">` block (Babel compiles the JSX in the browser).
-- **React 18 UMD** (`React`, `ReactDOM` globals) — *not* React 19 (which dropped
-  the UMD builds the CDN approach needs).
+- **Vite project, modular source.** App code lives under `src/` (see the Code
+  map). `@vitejs/plugin-react` compiles the JSX and `@tailwindcss/vite` builds
+  the CSS — no in-browser Babel, no CDN scripts, no internet needed at runtime.
+- **React 19** (`react` / `react-dom` from npm; mounted via
+  `react-dom/client`).
 - **State is in-memory only.** Nothing is saved to `localStorage`/disk; use
   **Export / Import JSON** to persist or share a plan.
 - **Styling is Tailwind classes only — no custom CSS and no inline `style`.**
-  Colours are stored as Tailwind classes (e.g. `bg-blue-200`), not hex.
+  Colours are stored as Tailwind classes (e.g. `bg-blue-200`), not hex. Because
+  colours are applied dynamically, the preset classes are written out as full
+  literal strings in `src/constants.js` so Tailwind's build-time scanner emits
+  them.
 - **Dates are hardcoded to 2026** (`YEAR` constant).
 
 ---
@@ -100,27 +109,36 @@ ranges: [
 
 ---
 
-## Code map (`index.html`)
+## Code map (`src/`)
 
-Organised into commented sections:
+```
+index.html              Vite entry: <div id="root"> + <script src="/src/main.jsx">
+src/
+  main.jsx              mounts <App/> via react-dom/client; imports index.css
+  index.css             @import "tailwindcss";
+  constants.js          configuration values
+  dateUtils.js          pure date/string helpers
+  App.jsx               the stateful root component
+  components/           one presentational component per file
+```
 
-- **Section 1 — Constants:** `YEAR`; `MONTHS` (each with `extraWeeksBefore`,
+- **`constants.js`:** `YEAR`; `MONTHS` (each with `extraWeeksBefore`,
   `hideBefore`/`hideAfter` to drive the extra June week and the de-duplicated
   boundary week); `WEEKDAY_NAMES`; `CZ_HOLIDAYS`; `PRESET_LABELS`;
   `PRESET_COLORS` (9 pastels) and `DEFAULT_COLOR`.
-- **Section 2 — Date utils (pure):** `toISO`, `addDays`, `mondayIndex`,
-  `formatShort`, `countDays`, `rangesOverlap`, **`overlapKind`** (none / boundary
-  / full — the heart of the travel-day rule), `normalizeRange`,
-  **`buildMonthGrid`** (builds a month's weeks incl. filler/extra/blank days),
-  and `stripDiacritics` (accent-insensitive label filtering).
-- **Section 3 — Components:** `LabelCombobox`, `RangeDialog`, `RangeList`,
-  `HolidayLegend`, `Toast`, `SelectionBadge`, `DayCell` (renders empty / single /
-  split-travel days), `MonthCard`.
-- **Section 4 — `App`:** owns all state (`ranges`, `selection`, `dialog`,
-  `toast`, `hoveredRangeId`); derives `dayToRanges`, `selectionSet`,
-  `selectionBounds`; holds `validateNewRange` (create rules) and
-  `validateImportedRanges` (import rules), plus the drag state machine.
-- **Section 5 — Mount:** `ReactDOM.createRoot(...).render(<App />)`.
+- **`dateUtils.js` (pure):** `toISO`, `addDays`, `mondayIndex`, `formatShort`,
+  `countDays`, `rangesOverlap`, **`overlapKind`** (none / boundary / full — the
+  heart of the travel-day rule), `normalizeRange`, **`buildMonthGrid`** (builds a
+  month's weeks incl. filler/extra/blank days), and `stripDiacritics`
+  (accent-insensitive label filtering).
+- **`components/`:** `LabelCombobox`, `RangeDialog`, `RangeList`, `HolidayLegend`,
+  `Toast`, `SelectionBadge`, `DayCell` (renders empty / single / split-travel
+  days), `MonthCard`. Each file has a default export.
+- **`App.jsx`:** owns all state (`ranges`, `selection`, `dialog`, `toast`,
+  `hoveredRangeId`); derives `dayToRanges`, `selectionSet`, `selectionBounds`;
+  holds `validateNewRange` (create rules) and `validateImportedRanges` (import
+  rules), plus the drag state machine.
+- **`main.jsx`:** `createRoot(...).render(<App />)`.
 
 **Interaction model (important):** `mousedown` on **any** day anchors a
 selection; whether it becomes an **edit** (a click that didn't move) or a **new
@@ -136,18 +154,21 @@ trip directly on mousedown.
   (date math, the drag state machine, overlap rules, the combobox). Match this
   style in new code.
 - **Tailwind only** — no custom CSS, no inline `style`. Dynamic colours are
-  Tailwind classes (so the CDN's runtime scanner picks them up).
+  Tailwind classes; keep the preset list as full literal strings in
+  `constants.js` so Tailwind's build-time scanner emits them.
 - **Every interactive element has a `data-testid`** — tests rely on these.
 - **Keep the Playwright suite green and grow it** — add a test for each new
-  behaviour. The suite is the safety net for this single mutable file.
+  behaviour. The suite is the safety net for this codebase.
 - **Local git commits per change** (small, descriptive messages).
 
 ---
 
 ## Testing notes & gotchas
 
-- Tests live in `tests/holidays.spec.js`; Playwright loads the app over a
-  `file://` URL (no server needed).
+- Tests live in `tests/holidays.spec.js`; they navigate to `/` against the Vite
+  dev server, which Playwright starts and stops automatically (`webServer` in
+  `playwright.config.js`). Run `npm run dev` in another terminal first and it
+  will be reused.
 - **Assert Tailwind class membership, not computed colour** — Tailwind 4 renders
   palette colours as `oklch()`, so `toHaveCSS("background-color", "rgb(...)")`
   is brittle; use `toHaveClass(/bg-blue-200/)` instead.
@@ -156,4 +177,4 @@ trip directly on mousedown.
   helper) before clicking a colour, or the click is intercepted.
 - **Imports require the current format:** colours must be Tailwind classes, so
   JSON exported before the pastel/classes refactor (hex colours) is rejected.
-- Needs **internet** for the CDN scripts during test runs.
+- No internet is required at runtime — all dependencies are bundled by Vite.
