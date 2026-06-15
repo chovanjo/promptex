@@ -1,8 +1,8 @@
-// Editing and deleting ranges: opening the edit dialog, renaming/
-// recoloring, discarding with Escape, pre-selected color, and the two
-// delete paths (dialog button and list button).
+// Editing and deleting ranges: opening the edit dialog (by clicking a
+// trip in the calendar), renaming/recoloring, discarding with Escape,
+// pre-selected color, and deleting via the dialog.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, dismissSuggestions, createRange, CLS } from "./helpers.js";
+import { openApp, cell, dismissSuggestions, createRange, CLS, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -24,18 +24,20 @@ test.describe("editing and deleting ranges", () => {
     await expect(page.getByTestId("label-input")).toHaveValue("Original");
   });
 
-  test("renaming and recoloring updates the calendar and the list", async ({ page }) => {
-    await page.getByTestId("range-item").getByTestId("edit-range-btn").click();
+  test("renaming and recoloring updates the calendar", async ({ page }) => {
+    await cell(page, "july", "2026-07-15").click(); // open the trip for editing
     await page.getByTestId("label-input").fill("Renamed");
     await dismissSuggestions(page);
     await page.getByTestId("color-red").click();
     await page.getByTestId("save-btn").click();
 
-    await expect(page.getByTestId("range-item")).toContainText("Renamed");
     await expect(cell(page, "july", "2026-07-13").getByTestId("range-label")).toHaveText("Renamed");
     await expect(cell(page, "july", "2026-07-15")).toHaveClass(new RegExp(CLS.red));
-    // Dates are unchanged — editing only touches label and color.
-    await expect(page.getByTestId("range-item")).toContainText("Jul 13 – Jul 17");
+    // Dates are unchanged — editing only touches label and color, so the
+    // range still spans exactly Jul 13–17.
+    await expect(cell(page, "july", "2026-07-17").getByTestId("range-label")).toHaveText("Renamed");
+    await expect(cell(page, "july", "2026-07-12").getByTestId("range-label")).toHaveCount(0);
+    await expect(cell(page, "july", "2026-07-18").getByTestId("range-label")).toHaveCount(0);
   });
 
   test("Escape in the edit dialog discards the changes", async ({ page }) => {
@@ -44,7 +46,7 @@ test.describe("editing and deleting ranges", () => {
     await page.keyboard.press("Escape");
 
     await expect(page.getByTestId("range-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("range-item")).toContainText("Original");
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Original");
   });
 
   test("the edit dialog pre-selects the range's current color", async ({ page }) => {
@@ -58,21 +60,36 @@ test.describe("editing and deleting ranges", () => {
     await cell(page, "july", "2026-07-15").click();
     await page.getByTestId("delete-btn").click();
 
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
-    // The cell is back to a plain, unpainted day.
+    // The whole trip is gone — the cell is back to a plain, unpainted day.
     await expect(cell(page, "july", "2026-07-15")).not.toHaveClass(new RegExp(CLS.blue));
-  });
-
-  test("Delete button in the list removes the range", async ({ page }) => {
-    await page.getByTestId("range-item").getByTestId("delete-range-btn").click();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
-    await expect(page.getByTestId("empty-hint")).toBeVisible();
+    await expectEmptyCalendar(page);
   });
 
   test("freed days can be selected again after deleting", async ({ page }) => {
-    await page.getByTestId("range-item").getByTestId("delete-range-btn").click();
+    await cell(page, "july", "2026-07-15").click(); // open the trip…
+    await page.getByTestId("delete-btn").click();   // …and delete it
     await createRange(page, cell(page, "july", "2026-07-14"), cell(page, "july", "2026-07-16"),
       "Second attempt");
-    await expect(page.getByTestId("range-item")).toContainText("Second attempt");
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Second attempt");
+  });
+
+  test("recoloring a trip that forms a travel day updates its half", async ({ page }) => {
+    // The block's beforeEach already created "Original" (Jul 13–17, blue).
+    // Add a second trip that begins on Jul 17, so Jul 17 becomes a travel
+    // day: top half = Original (leaving), bottom half = Next (arriving).
+    await createRange(page, cell(page, "july", "2026-07-19"), cell(page, "july", "2026-07-17"),
+      "Next", "green");
+    const leaving = cell(page, "july", "2026-07-17").getByTestId("travel-leaving");
+    await expect(leaving).toHaveClass(new RegExp(CLS.blue));
+
+    // Recolor Original (open it from a day it solely owns, Jul 14); its
+    // leaving half on the shared travel day repaints.
+    await cell(page, "july", "2026-07-14").click();
+    await dismissSuggestions(page);
+    await page.getByTestId("color-red").click();
+    await page.getByTestId("save-btn").click();
+
+    await expect(leaving).toHaveClass(new RegExp(CLS.red));
+    await expect(leaving).toHaveText("Original");
   });
 });

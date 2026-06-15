@@ -1,13 +1,9 @@
-/* =================================================================
-   SECTION 2 — DATE UTILITIES
-   Small *pure* functions (same input → same output, no side
-   effects). Pure helpers are easy to test and reason about.
-
-   Important trick used throughout: we represent days as ISO strings
-   like "2026-07-13". Because the parts are ordered year → month →
-   day with fixed widths, plain string comparison ("<", ">") sorts
-   dates correctly — no Date math needed for comparisons.
-   ================================================================= */
+// Small *pure* date/string helpers (same input → same output, no side
+// effects), so they are easy to test and reason about.
+//
+// Trick used throughout: days are ISO strings like "2026-07-13". Because
+// the parts run year → month → day with fixed widths, plain string
+// comparison ("<", ">") sorts dates correctly — no Date math needed.
 
 import { CZ_HOLIDAYS } from "./constants.js";
 

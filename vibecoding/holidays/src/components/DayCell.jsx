@@ -1,14 +1,10 @@
-/* =================================================================
-   SECTION 3 — SMALL PRESENTATIONAL COMPONENTS
-   Each component does ONE thing and receives everything it needs
-   via props ("props down"). When the user interacts, it calls a
-   callback prop ("callbacks up") — it never changes shared state
-   itself. This one-way data flow is the core React pattern.
-   ================================================================= */
-
 /**
- * One day cell in a month grid. It receives the array of ranges
- * covering this day (0, 1, or — on a travel day — 2):
+ * One day cell in a month grid. A presentational component: everything
+ * comes in via props ("props down") and interactions are reported through
+ * callback props ("callbacks up") — it never changes shared state itself.
+ *
+ * It receives the array of ranges covering this day (0, 1, or — on a
+ * travel day — 2):
  *   - 0 → empty day: white / weekend tint / live drag preview;
  *   - 1 → painted with that range's color, label on every day;
  *   - 2 → TRAVEL DAY: split into a top half (the trip you're
@@ -16,7 +12,7 @@
  * Empty days start a drag (onStartDrag); occupied days/halves open
  * the matching range for editing (onEditRange).
  */
-export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, isRangeHovered, onStartDrag, onEditRange, onMouseEnter }) {
+export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
   const { iso, dayNumber, inMonth, isWeekend, holiday } = day;
   const isTravelDay = ranges.length === 2;
 
@@ -29,7 +25,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
     />
   );
 
-  // -------- Travel day: two stacked, independently-clickable halves.
+  // Travel day: two stacked, independently-clickable halves.
   if (isTravelDay) {
     // One trip ENDS here (the half you're leaving), the other STARTS
     // here (the half you're arriving at). Derive each by its boundary.
@@ -50,8 +46,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
       </div>
     );
 
-    const wrapperClasses = "relative h-14 border border-gray-100 cursor-pointer select-none" +
-      (isRangeHovered ? " ring-2 ring-inset ring-gray-700" : "");
+    const wrapperClasses = "relative h-14 border border-gray-100 cursor-pointer select-none";
 
     return (
       <div
@@ -70,7 +65,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
     );
   }
 
-  // -------- Empty day or single range.
+  // Empty day or single range.
   const range = ranges[0] || null;
   // Cursor signals what a click does: occupied days edit (pointer),
   // free days start a selection (cell — the spreadsheet "select"
@@ -102,7 +97,6 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
   }
 
   if (!inMonth && !range) classes.push("text-gray-400"); // dim filler days
-  if (isRangeHovered) classes.push("ring-2 ring-inset ring-gray-700");
 
   return (
     <div

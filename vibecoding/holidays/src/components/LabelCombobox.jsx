@@ -91,9 +91,9 @@ export default function LabelCombobox({ value, onChange, options, placeholder })
   }
 
   return (
-    /* `relative` wrapper + `absolute` panel = the standard CSS
-       pattern for dropdowns: the panel is positioned against the
-       wrapper and floats over whatever comes below (z-10). */
+    // `relative` wrapper + `absolute` panel = the standard CSS
+    // pattern for dropdowns: the panel is positioned against the
+    // wrapper and floats over whatever comes below (z-10).
     <div ref={wrapperRef} className="relative mb-4" onKeyDown={handleKeyDown}>
       <input
         id="range-label-input"

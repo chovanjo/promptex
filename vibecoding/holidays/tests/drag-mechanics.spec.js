@@ -1,7 +1,7 @@
 // Drag mechanics: live highlight, cursors, the selection badge, rounded
 // ends, and releasing the mouse anywhere on the page.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, createRange } from "./helpers.js";
+import { openApp, cell, createRange, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -21,7 +21,7 @@ test.describe("drag mechanics", () => {
 
     await page.mouse.up(); // finish the drag, then discard the range
     await page.getByTestId("cancel-btn").click();
-    await expect(page.getByTestId("range-item")).toHaveCount(0);
+    await expectEmptyCalendar(page);
   });
 
   test("free days show the 'cell' cursor, occupied days the pointer", async ({ page }) => {
@@ -72,5 +72,25 @@ test.describe("drag mechanics", () => {
     const dialog = page.getByTestId("range-dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText("Jul 7 – Jul 9");
+  });
+
+  test("a saved range is rounded only at its two ends", async ({ page }) => {
+    await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-15"), "Trip");
+
+    await expect(cell(page, "july", "2026-07-13")).toHaveClass(/rounded-l-lg/);
+    await expect(cell(page, "july", "2026-07-15")).toHaveClass(/rounded-r-lg/);
+    // The middle day has neither rounded end — the range reads as one pill.
+    await expect(cell(page, "july", "2026-07-14")).not.toHaveClass(/rounded-[lr]-lg/);
+  });
+
+  test("the selection badge uses the singular 'day' for a one-day press", async ({ page }) => {
+    // Press a single free day without moving — the badge counts just one day.
+    await cell(page, "july", "2026-07-20").hover();
+    await page.mouse.down();
+
+    await expect(page.getByTestId("selection-badge")).toHaveText("Jul 20 – Jul 20 · 1 day");
+
+    await page.mouse.up();
+    await page.getByTestId("cancel-btn").click(); // discard the pending 1-day range
   });
 });

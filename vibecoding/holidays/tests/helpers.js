@@ -1,10 +1,7 @@
-// =====================================================================
-// Shared helpers for the Holiday Planner e2e suite.
-//
-// The tests are split into one `*.spec.js` file per feature area; every
-// file imports the helpers it needs from here. This file is NOT a spec
-// (it has no `.spec` in its name), so Playwright never runs it directly.
-// =====================================================================
+// Shared helpers for the Holiday Planner e2e suite. The tests are split
+// into one `*.spec.js` file per feature area; each imports the helpers it
+// needs from here. This file is NOT a spec (no `.spec` in its name), so
+// Playwright never runs it directly.
 import { expect } from "@playwright/test";
 
 /**
@@ -69,3 +66,14 @@ export async function createRange(page, fromCell, toCell, label, presetName = "b
     (Asserting the computed CSS value would be brittle: Tailwind 4
     resolves its palette to oklch() colors, not rgb().) */
 export const CLS = { red: "bg-red-200", green: "bg-green-200", blue: "bg-blue-200", violet: "bg-violet-200" };
+
+/**
+ * Assert the calendar holds no trips at all. The planner has no separate
+ * list any more, so "nothing is planned" is read straight off the grid:
+ * single-day/range cells render a `range-label`, travel days render a
+ * `travel-leaving` half — an empty plan shows neither.
+ */
+export async function expectEmptyCalendar(page) {
+  await expect(page.getByTestId("range-label")).toHaveCount(0);
+  await expect(page.getByTestId("travel-leaving")).toHaveCount(0);
+}
