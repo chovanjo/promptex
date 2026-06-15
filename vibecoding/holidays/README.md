@@ -21,7 +21,7 @@ npm run build               # production build into dist/
 npm run preview             # serve the production build locally
 ```
 
-- **Tests** (Playwright, 74 e2e tests). Playwright starts the Vite dev server
+- **Tests** (Playwright, 76 e2e tests). Playwright starts the Vite dev server
   itself, so no separate step is needed:
   ```bash
   npx playwright install chromium   # once
@@ -154,7 +154,11 @@ trip directly on mousedown.
 
 - **Junior-readable, heavily commented code** — comments explain the *why*
   (date math, the drag state machine, overlap rules, the combobox). Match this
-  style in new code.
+  style in new code. Document the non-obvious; let clear names speak for the rest.
+- **One comment style:** `/** … */` for a doc-comment directly above a function,
+  component, or constant; `//` for everything else (file/group headers, inline
+  notes, rationale). The only `/* … */` blocks left sit between JSX tag
+  attributes, where `//` is illegal.
 - **Tailwind only** — no custom CSS, no inline `style`. Dynamic colours are
   Tailwind classes; keep the preset list as full literal strings in
   `constants.js` so Tailwind's build-time scanner emits them.
@@ -168,8 +172,10 @@ trip directly on mousedown.
 ## Testing notes & gotchas
 
 - Tests live under `tests/`, one `*.spec.js` file per feature area, with shared
-  helpers (`openApp`, `cell`, `dragSelect`, `createRange`, …) in
-  `tests/helpers.js`. They navigate to `/` against the Vite dev server, which
+  helpers (`openApp`, `cell`, `dragSelect`, `createRange`, `expectEmptyCalendar`, …)
+  in `tests/helpers.js`. With no separate list, tests assert against the calendar
+  itself — a trip's `range-label` on its cells, travel-day testids, and
+  `expectEmptyCalendar` for "nothing planned". They navigate to `/` against the Vite dev server, which
   Playwright starts and stops automatically (`webServer` in
   `playwright.config.js`). Run `npm run dev` in another terminal first and it
   will be reused.
