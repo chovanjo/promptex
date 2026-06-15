@@ -1,6 +1,9 @@
 # Dependencies installed by npm (recreate with `npm install`)
 node_modules/
 
+# Vite production build output (recreate with `npm run build`)
+dist/
+
 # Playwright output folders (recreated on every test run)
 test-results/
 playwright-report/

@@ -1,0 +1,5 @@
+/* Tailwind CSS 4: this single import pulls in Tailwind's base styles and
+   makes every utility class available. The @tailwindcss/vite plugin scans
+   our source files for the classes we actually use and generates only
+   those — so there is no custom CSS to write here. */
+@import "tailwindcss";

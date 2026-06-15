@@ -1,8 +1,12 @@
 {
   "name": "holidays",
   "version": "1.0.0",
-  "description": "Holiday planner for July & August 2026 — single-file React app with Playwright tests",
+  "description": "Holiday planner for July & August 2026 — Vite + React 19 app with Playwright tests",
+  "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:report": "playwright show-report"
@@ -10,7 +14,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "devDependencies": {
-    "@playwright/test": "^1.60.0"
+    "@playwright/test": "^1.60.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "vite": "^7.0.0"
   }
 }
