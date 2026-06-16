@@ -109,7 +109,7 @@ export default function App() {
   function validateNewRange(start, end) {
     for (const r of ranges) {
       if (overlapKind(start, end, r.start, r.end) === "full") {
-        return `Overlaps "${r.label}" — ranges cannot overlap.`;
+        return `Overlaps "${r.label}" - ranges cannot overlap.`;
       }
     }
     // Count how many existing ranges already touch each boundary day
@@ -427,7 +427,7 @@ export default function App() {
         <ul className="space-y-1">
           <li><strong>Add a trip:</strong> drag across days (or click a single day), then type a label, pick a colour, and Save.</li>
           <li><strong>Edit or delete:</strong> click a trip to change its label or colour, or remove it with Delete.</li>
-          <li><strong>Travel day:</strong> drag a new trip onto another trip's first or last day — that shared day splits in two (leaving / arriving).</li>
+          <li><strong>Travel day:</strong> drag a new trip onto another trip's first or last day - that shared day splits in two (leaving / arriving).</li>
           <li><strong>Change year:</strong> use the ‹ › arrows by the year.</li>
           <li><strong>Save or share:</strong> Export / Import JSON; Clear all starts over.</li>
         </ul>

@@ -114,7 +114,7 @@ export default function DayCell({ day, ranges, holiday, isSelected, isSelectionS
     <div
       data-date={iso}
       className={classes.join(" ")}
-      title={[range && range.label, holiday].filter(Boolean).join(" — ")}
+      title={[range && range.label, holiday].filter(Boolean).join(" - ")}
       onMouseDown={(e) => {
         e.preventDefault(); // stop the browser from text-selecting while we drag
         // Begin a selection anchored here — on a free day OR on an

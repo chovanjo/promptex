@@ -21,11 +21,11 @@ export default function HolidayLegend({ holidays, status }) {
         <HolidayStatus status={status} />
       </div>
       {entries.length > 0 ? (
-        <ul className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600">
+        <ul className="space-y-1 text-sm text-gray-600">
           {entries.map(([iso, name]) => (
             <li key={iso} data-testid="holiday-legend-item" className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-              {formatShort(iso)} — {name}
+              {formatShort(iso)} - {name}
             </li>
           ))}
         </ul>

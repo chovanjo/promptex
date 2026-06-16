@@ -61,7 +61,7 @@ export function validateRangesSchema(data) {
   if (path.endsWith("/color")) {
     const index = Number(path.split("/")[2]);
     const label = data?.ranges?.[index]?.label;
-    return `Range "${label}" has an invalid color — expected a Tailwind class like "bg-blue-200".`;
+    return `Range "${label}" has an invalid color - expected a Tailwind class like "bg-blue-200".`;
   }
   // Any other per-range problem (label/start/end type or format, a missing
   // field, a non-object entry, an unknown extra field).
