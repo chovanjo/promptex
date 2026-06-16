@@ -122,7 +122,7 @@ export function buildMonthGrid(year, month) {
 }
 
 /** Strip accents so filtering is diacritics-insensitive: typing
-    "ta" should find "Tábor". `normalize("NFD")` splits each
+    "gre" should find "Grécko". `normalize("NFD")` splits each
     accented letter into base letter + combining accent mark, and
     the regex removes those marks (Unicode range U+0300–U+036F). */
 export function stripDiacritics(text) {

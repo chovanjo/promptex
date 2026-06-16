@@ -77,9 +77,9 @@ npm run preview             # serve the production build locally
 - **Drag** across days to select a range (works **backwards** and **across month
   boundaries**); a **single click** on a free day makes a one-day trip.
 - A dialog captures a **label** and **colour**:
-  - **Label** is a custom combobox: five place suggestions
-    (`Dekýš, Praha, Tábor, Nemšová, Grécko`) **plus free text**; filtering is
-    **accent-insensitive** ("ta" → Tábor); arrow-key navigation, Enter to pick,
+  - **Label** is a custom combobox: place suggestions shown **A–Z**
+    (`Dekýš, Grécko, Nemšová, Praha`) **plus free text**; filtering is
+    **accent-insensitive** ("gre" → Grécko); arrow-key navigation, Enter to pick,
     Escape closes the dropdown first then the dialog, chevron toggles it.
   - **Colour** is one of **9 pastel swatches** (no custom colour picker).
 - **Click a trip** (a day cell, or a travel-day half) to rename, recolour, or

@@ -15,7 +15,7 @@ export const WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Suggested labels shown as a dropdown on the label input.
     These are just suggestions — the user can still type anything. */
-export const PRESET_LABELS = ["Dekýš", "Praha", "Tábor", "Nemšová", "Grécko"];
+export const PRESET_LABELS = ["Dekýš", "Praha", "Nemšová", "Grécko"];
 
 /** The 9 pastel colors offered in the dialog — Tailwind's light
     200-shade background classes. We store the CLASS NAME (not a

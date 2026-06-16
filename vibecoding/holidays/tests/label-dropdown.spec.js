@@ -18,8 +18,8 @@ test.describe("label dropdown", () => {
     await page.getByTestId("label-input").click();
 
     const options = page.getByTestId("label-option");
-    await expect(options).toHaveCount(5);
-    await expect(options).toHaveText(["Dekýš", "Praha", "Tábor", "Nemšová", "Grécko"]);
+    await expect(options).toHaveCount(4);
+    await expect(options).toHaveText(["Dekýš", "Grécko", "Nemšová", "Praha"]);
 
     await options.filter({ hasText: "Praha" }).click();
     await expect(page.getByTestId("label-options")).not.toBeVisible();
@@ -32,11 +32,11 @@ test.describe("label dropdown", () => {
   test("typing filters the suggestions, ignoring accents", async ({ page }) => {
     const input = page.getByTestId("label-input");
     await input.click();
-    await input.pressSequentially("ta"); // should match "Tábor" despite the á
+    await input.pressSequentially("gre"); // should match "Grécko" despite the é
 
     const options = page.getByTestId("label-option");
     await expect(options).toHaveCount(1);
-    await expect(options).toHaveText("Tábor");
+    await expect(options).toHaveText("Grécko");
 
     // Text matching no suggestion hides the panel but still works as a
     // custom label — free text is a first-class citizen.
@@ -82,7 +82,7 @@ test.describe("label dropdown", () => {
     // Clicking the input again must show the FULL list, not just the
     // option matching the already-selected value.
     await input.click();
-    await expect(page.getByTestId("label-option")).toHaveCount(5);
+    await expect(page.getByTestId("label-option")).toHaveCount(4);
 
     await page.getByTestId("label-option").filter({ hasText: "Grécko" }).click();
     await expect(input).toHaveValue("Grécko");
@@ -98,7 +98,7 @@ test.describe("label dropdown", () => {
 
     await expect(page.getByTestId("label-input")).toHaveValue("Praha");
     await page.getByTestId("label-input").click();
-    await expect(page.getByTestId("label-option")).toHaveCount(5);
+    await expect(page.getByTestId("label-option")).toHaveCount(4);
   });
 
   test("the chevron button toggles the dropdown", async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe("label dropdown", () => {
     const input = page.getByTestId("label-input");
     await input.click();
     await input.press("ArrowDown"); // highlight Dekýš (index 0)
-    await input.press("ArrowDown"); // highlight Praha (index 1)
+    await input.press("ArrowDown"); // highlight Grécko (index 1)
     await input.press("ArrowUp");   // back to Dekýš (index 0)
     await input.press("Enter");
 
