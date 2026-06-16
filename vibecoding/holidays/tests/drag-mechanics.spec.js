@@ -24,10 +24,10 @@ test.describe("drag mechanics", () => {
     await expectEmptyCalendar(page);
   });
 
-  test("free days show the 'cell' cursor, occupied days the pointer", async ({ page }) => {
-    // A free day invites selection (cursor: cell)…
-    await expect(cell(page, "july", "2026-07-10")).toHaveCSS("cursor", "cell");
-    // …an occupied day is click-to-edit (cursor: pointer).
+  test("day cells show the pointer (hand) cursor", async ({ page }) => {
+    // Free days are clickable (drag to select / click to create)…
+    await expect(cell(page, "july", "2026-07-10")).toHaveCSS("cursor", "pointer");
+    // …and so are occupied days (click to edit) — both use the hand.
     await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-15"), "Trip");
     await expect(cell(page, "july", "2026-07-14")).toHaveCSS("cursor", "pointer");
   });

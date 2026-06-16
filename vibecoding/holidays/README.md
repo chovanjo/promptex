@@ -98,9 +98,8 @@ npm run preview             # serve the production build locally
   boundary day is allowed**; a day may hold **at most two trips**.
 
 **Feedback & data**
-- **Live selection feedback:** free days show the `cell` (select) cursor,
-  occupied days the pointer; the in-progress drag is a blue pill with a
-  floating "Jul 13 – Jul 17 · 5 days" badge.
+- **Live selection feedback:** day cells use the hand (pointer) cursor; the
+  in-progress drag is a blue pill with a floating "Jul 13 – Jul 17 · 5 days" badge.
 - **Export / Import JSON** (validated on import; exported as `holidays.json`,
   the whole multi-year plan); **Clear all** (confirmed).
 

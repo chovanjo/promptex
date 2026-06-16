@@ -90,13 +90,13 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
   } else if (isSelected) {
     // Live preview while dragging — a strong blue that forms one
     // continuous pill (rounded only at the selection's two ends).
-    classes.push("cursor-cell bg-blue-300 ring-2 ring-inset ring-blue-500 text-blue-900");
+    classes.push("cursor-pointer bg-blue-300 ring-2 ring-inset ring-blue-500 text-blue-900");
     if (isSelectionStart) classes.push("rounded-l-lg");
     if (isSelectionEnd) classes.push("rounded-r-lg");
   } else if (isWeekend) {
-    classes.push("cursor-cell bg-gray-50 hover:bg-blue-50");
+    classes.push("cursor-pointer bg-gray-50 hover:bg-blue-50");
   } else {
-    classes.push("cursor-cell bg-white hover:bg-blue-50");
+    classes.push("cursor-pointer bg-white hover:bg-blue-50");
   }
 
   return (
