@@ -351,7 +351,7 @@ export default function App() {
       {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Holiday Planner {year}</h1>
+          <h1 className="text-2xl font-bold">Holiday Planner</h1>
           <p className="text-sm text-gray-500">
             Drag across days to create a range · click a range to edit it · drag onto a trip's edge for a travel day
           </p>

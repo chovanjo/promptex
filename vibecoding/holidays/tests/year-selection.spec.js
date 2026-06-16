@@ -13,14 +13,14 @@ test.describe("year selection", () => {
     await expect(page.getByTestId("month-january")).toBeVisible();
     const currentYear = String(new Date().getFullYear());
     await expect(page.getByTestId("year-display")).toHaveText(currentYear);
-    await expect(page.getByRole("heading", { name: `Holiday Planner ${currentYear}` })).toBeVisible();
+    // The year lives in the picker, not the heading.
+    await expect(page.getByRole("heading", { name: "Holiday Planner" })).toBeVisible();
   });
 
-  test("next / prev arrows step the year and update the title", async ({ page }) => {
+  test("next / prev arrows step the displayed year", async ({ page }) => {
     await openApp(page); // pinned to 2026
     await page.getByTestId("year-next").click();
     await expect(page.getByTestId("year-display")).toHaveText("2027");
-    await expect(page.getByRole("heading", { name: "Holiday Planner 2027" })).toBeVisible();
 
     await page.getByTestId("year-prev").click();
     await page.getByTestId("year-prev").click();

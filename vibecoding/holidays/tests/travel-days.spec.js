@@ -50,10 +50,11 @@ test.describe("travel days", () => {
     await cell(page, "july", "2026-07-13").hover();
     await page.mouse.up();
 
-    // It's the CREATE dialog (not Edit), spanning Jul 13–15.
+    // It's the CREATE dialog (not Edit), spanning Jul 13–15. Create mode
+    // has no Delete button.
     const dialog = page.getByTestId("range-dialog");
-    await expect(dialog).toContainText("New range");
     await expect(dialog).toContainText("Jul 13 – Jul 15");
+    await expect(page.getByTestId("delete-btn")).toHaveCount(0);
     await page.getByTestId("label-input").fill("Dekýš");
     await dialog.locator("h3").click(); // dismiss suggestions
     await page.getByTestId("save-btn").click();
@@ -70,9 +71,10 @@ test.describe("travel days", () => {
       "Praha", "green");
 
     // Click (no movement) on the first day → Edit, not a new selection.
+    // Edit mode is shown by the prefilled label + the Delete button.
     await cell(page, "july", "2026-07-15").click();
-    await expect(page.getByTestId("range-dialog")).toContainText("Edit range");
     await expect(page.getByTestId("label-input")).toHaveValue("Praha");
+    await expect(page.getByTestId("delete-btn")).toBeVisible();
   });
 
   test("the shared boundary day is highlighted while dragging onto it", async ({ page }) => {
