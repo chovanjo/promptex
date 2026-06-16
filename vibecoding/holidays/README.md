@@ -15,13 +15,13 @@ no CDN scripts and nothing is compiled in the browser.
 ## Run it
 
 ```bash
-npm install                 # React, Vite, Tailwind, Playwright
+npm install                 # React, Vite, Tailwind, ajv, Playwright
 npm run dev                 # start the dev server, then open the printed URL
 npm run build               # production build into dist/
 npm run preview             # serve the production build locally
 ```
 
-- **Tests** (Playwright, 81 e2e tests). Playwright starts the Vite dev server
+- **Tests** (Playwright, 84 e2e tests). Playwright starts the Vite dev server
   itself, so no separate step is needed:
   ```bash
   npx playwright install chromium   # once
@@ -44,6 +44,11 @@ npm run preview             # serve the production build locally
 - **One plan spans all years.** Trips carry absolute ISO dates; the calendar
   shows the selected year, but every year's trips stay in memory and in the
   export. Export / Import / Clear act on the whole plan.
+- **Import is validated.** The file *structure* is checked against a JSON Schema
+  (`src/importSchema.js`, via **ajv** + ajv-formats) — shape, types, a real
+  `date` format, and the colour pattern. The travel-day domain rules a schema
+  can't express (start ≤ end, no multi-day overlap, ≤ 2 trips/day) stay in
+  `validateImportedRanges`.
 - **Styling is Tailwind classes only — no custom CSS and no inline `style`.**
   Colours are stored as Tailwind classes (e.g. `bg-blue-200`), not hex. Because
   colours are applied dynamically, the preset classes are written out as full
@@ -130,6 +135,7 @@ src/
   index.css             @import "tailwindcss";
   constants.js          configuration values
   dateUtils.js          pure date/string helpers
+  importSchema.js       JSON Schema + ajv validator for imported files
   App.jsx               the stateful root component
   components/           one presentational component per file
 ```
@@ -142,6 +148,9 @@ src/
   heart of the travel-day rule), `normalizeRange`, **`buildMonthGrid(year, month)`**
   (one month's Monday-first weeks with adjacent-month filler), and
   `stripDiacritics` (accent-insensitive label filtering).
+- **`importSchema.js`:** `RANGES_SCHEMA` (the export/import contract) and
+  `validateRangesSchema` (ajv-compiled; maps the first error to a friendly
+  message). Used by `App.jsx`'s `validateImportedRanges` for the structural part.
 - **`components/`:** `LabelCombobox`, `RangeDialog`, `Toast`, `SelectionBadge`,
   `DayCell` (renders filler / empty / single / split-travel days), `MonthCard`
   (one month, takes `year` + `month`). Each file has a default export.

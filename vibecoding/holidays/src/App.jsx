@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } fr
 
 import { MONTH_NAMES, DEFAULT_COLOR } from "./constants.js";
 import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
+import { validateRangesSchema } from "./importSchema.js";
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
@@ -267,21 +268,14 @@ export default function App() {
       user-supplied file has the right shape — check everything and
       reject with a clear message if anything is off. */
   function validateImportedRanges(data) {
-    if (!data || !Array.isArray(data.ranges)) {
-      return "File must contain a { ranges: [...] } object.";
-    }
-    const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
-    // Colors are Tailwind background classes like "bg-blue-200" —
-    // anything else would silently render as an unstyled range.
-    const colorPattern = /^bg-[a-z]+-\d{2,3}$/;
+    // Structure (shape, types, date format, colour pattern) is checked
+    // against a JSON Schema; see src/importSchema.js.
+    const schemaError = validateRangesSchema(data);
+    if (schemaError) return schemaError;
+
+    // The rest are domain rules a schema can't express. With the schema
+    // passed, every start/end is a real YYYY-MM-DD date.
     for (const r of data.ranges) {
-      if (typeof r.label !== "string" ||
-          !isoPattern.test(r.start || "") || !isoPattern.test(r.end || "")) {
-        return "Each range needs label, color, start and end (YYYY-MM-DD).";
-      }
-      if (!colorPattern.test(r.color || "")) {
-        return `Range "${r.label}" has an invalid color — expected a Tailwind class like "bg-blue-200".`;
-      }
       if (r.start > r.end) return `Range "${r.label}" ends before it starts.`;
     }
     // Reject true (multi-day) overlaps — a single shared boundary

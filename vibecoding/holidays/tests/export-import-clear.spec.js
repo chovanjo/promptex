@@ -128,6 +128,44 @@ test.describe("export, import and clear", () => {
     await expectEmptyCalendar(page);
   });
 
+  test("importing an impossible calendar date is rejected", async ({ page }) => {
+    // Right shape (YYYY-MM-DD) but not a real day — the JSON Schema's
+    // `format: date` rejects it where a plain regex would let it through.
+    const fileContent = JSON.stringify({
+      ranges: [{ label: "Feb 30", color: "bg-red-200", start: "2026-02-30", end: "2026-03-02" }],
+    });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "feb30.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
+  test("importing a range with an unknown extra field is rejected", async ({ page }) => {
+    // The schema is strict (additionalProperties: false), so stray fields
+    // are caught rather than silently ignored.
+    const fileContent = JSON.stringify({
+      ranges: [{ label: "Sneaky", color: "bg-red-200", start: "2026-07-10", end: "2026-07-12", foo: 1 }],
+    });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "extra-field.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
+  test("importing a non-object range entry is rejected", async ({ page }) => {
+    const fileContent = JSON.stringify({ ranges: [5] });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "non-object.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
   test("importing an empty ranges array is accepted and clears the plan", async ({ page }) => {
     await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-15"),
       "Will be cleared");
