@@ -61,9 +61,12 @@ test.describe("drag mechanics", () => {
   });
 
   test("releasing the mouse outside the calendar still finalizes the selection", async ({ page }) => {
-    await cell(page, "july", "2026-07-07").hover();
+    // Use a top-row month (January) so the page heading is already in view —
+    // reaching it needs no scroll, which would otherwise slide a day cell
+    // under the cursor and extend the selection mid-drag.
+    await cell(page, "january", "2026-01-07").hover();
     await page.mouse.down();
-    await cell(page, "july", "2026-07-09").hover();
+    await cell(page, "january", "2026-01-09").hover();
     // Wander off the day grid (over the page heading) before releasing —
     // the app listens for mouseup on the whole document, so this works.
     await page.getByRole("heading", { name: /Holiday Planner/ }).hover();
@@ -71,7 +74,7 @@ test.describe("drag mechanics", () => {
 
     const dialog = page.getByTestId("range-dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText("Jul 7 – Jul 9");
+    await expect(dialog).toContainText("Jan 7 – Jan 9");
   });
 
   test("a saved range is rounded only at its two ends", async ({ page }) => {

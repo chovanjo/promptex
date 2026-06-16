@@ -347,7 +347,7 @@ export default function App() {
   const importInputRef = useRef(null);
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto p-6">
       {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
@@ -391,7 +391,7 @@ export default function App() {
       </header>
 
       {/* The full year: one card per month, like a wall calendar. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-6">
         {MONTH_NAMES.map((name, i) => (
           <MonthCard
             key={name}
