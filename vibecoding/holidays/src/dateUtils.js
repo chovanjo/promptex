@@ -16,6 +16,15 @@ export function toISO(date) {
   return `${y}-${m}-${d}`;
 }
 
+/** Parse an ISO date string ("2026-07-13") into a *local* midnight Date.
+    `new Date("2026-07-13")` would parse as UTC midnight, which then reads
+    back as the previous day via the local `toISO` for users west of UTC —
+    so we build the Date from local parts instead. */
+export function fromISO(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 /** Return a new Date that is `days` after `date` (negative = before).
     We never mutate the input — mutation causes subtle bugs. */
 export function addDays(date, days) {
@@ -41,17 +50,10 @@ export function formatShort(iso) {
 
 /** Number of days in an inclusive ISO range, e.g. Jul 13–17 → 5. */
 export function countDays(startIso, endIso) {
-  const start = new Date(startIso);
-  const end = new Date(endIso);
+  const start = fromISO(startIso);
+  const end = fromISO(endIso);
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   return Math.round((end - start) / MS_PER_DAY) + 1;
-}
-
-/** Do two inclusive ranges share at least one day?
-    Classic interval-overlap test: they overlap unless one ends
-    before the other starts. Works on ISO strings directly. */
-export function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return aStart <= bEnd && bStart <= aEnd;
 }
 
 /**

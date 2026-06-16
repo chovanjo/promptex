@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
 import { MONTH_NAMES, DEFAULT_COLOR } from "./constants.js";
-import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
+import { toISO, fromISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
 import { validateRangesSchema } from "./importSchema.js";
 import { useHolidays } from "./useHolidays.js";
 
@@ -44,8 +44,8 @@ export default function App() {
   const dayToRanges = useMemo(() => {
     const map = new Map();
     for (const range of ranges) {
-      let cursor = new Date(range.start);
-      const last = new Date(range.end);
+      let cursor = fromISO(range.start);
+      const last = fromISO(range.end);
       while (cursor <= last) {
         const iso = toISO(cursor);
         if (!map.has(iso)) map.set(iso, []);
@@ -62,8 +62,8 @@ export default function App() {
     const set = new Set();
     if (selection) {
       const [start, end] = normalizeRange(selection.anchor, selection.hover);
-      let cursor = new Date(start);
-      const last = new Date(end);
+      let cursor = fromISO(start);
+      const last = fromISO(end);
       while (cursor <= last) {
         set.add(toISO(cursor));
         cursor = addDays(cursor, 1);
@@ -297,8 +297,8 @@ export default function App() {
     // No day may hold more than two trips (one leaving, one arriving).
     const perDay = {};
     for (const r of data.ranges) {
-      let cursor = new Date(r.start);
-      const last = new Date(r.end);
+      let cursor = fromISO(r.start);
+      const last = fromISO(r.end);
       while (cursor <= last) {
         const iso = toISO(cursor);
         perDay[iso] = (perDay[iso] || 0) + 1;
@@ -428,7 +428,7 @@ export default function App() {
           <li><strong>Add a trip:</strong> drag across days (or click a single day), then type a label, pick a colour, and Save.</li>
           <li><strong>Edit or delete:</strong> click a trip to change its label or colour, or remove it with Delete.</li>
           <li><strong>Travel day:</strong> drag a new trip onto another trip's first or last day - that shared day splits in two (leaving / arriving).</li>
-          <li><strong>Change year:</strong> use the ‹ › arrows by the year.</li>
+          <li><strong>Change year:</strong> use the arrows next to the year.</li>
           <li><strong>Save or share:</strong> Export / Import JSON; Clear all starts over.</li>
         </ul>
       </section>

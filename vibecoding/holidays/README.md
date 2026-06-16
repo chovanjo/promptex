@@ -63,8 +63,8 @@ npm run preview             # serve the production build locally
 ## Features
 
 **Calendar**
-- All **12 months** of the selected year, in a responsive grid (1–4 columns),
-  each a standard **Monday-first** month.
+- All **12 months** of the selected year, full-width in a responsive grid
+  (1–3 columns), each a standard **Monday-first** month.
 - **Year switcher:** `‹ year ›` arrows in the header step the whole calendar a
   year at a time; it opens on the current year.
 - Each month is padded with greyed **filler days** from the adjacent months —
@@ -154,17 +154,19 @@ src/
 - **`constants.js`:** `MONTH_NAMES` (the 12 month names, index + 1 = month
   number); `WEEKDAY_NAMES`; `PRESET_LABELS`; `PRESET_COLORS` (9 pastels) and
   `DEFAULT_COLOR`.
-- **`dateUtils.js` (pure):** `toISO`, `addDays`, `mondayIndex`, `formatShort`,
-  `countDays`, `rangesOverlap`, **`overlapKind`** (none / boundary / full — the
-  heart of the travel-day rule), `normalizeRange`, **`buildMonthGrid(year, month)`**
-  (one month's Monday-first weeks with adjacent-month filler), and
-  `stripDiacritics` (accent-insensitive label filtering).
+- **`dateUtils.js` (pure):** `toISO`, `fromISO` (local-midnight parse),
+  `addDays`, `mondayIndex`, `formatShort`, `countDays`, **`overlapKind`** (none /
+  boundary / full — the heart of the travel-day rule), `normalizeRange`,
+  **`buildMonthGrid(year, month)`** (one month's Monday-first weeks with
+  adjacent-month filler), and `stripDiacritics` (accent-insensitive label filtering).
 - **`importSchema.js`:** `RANGES_SCHEMA` (the export/import contract) and
   `validateRangesSchema` (ajv-compiled; maps the first error to a friendly
   message). Used by `App.jsx`'s `validateImportedRanges` for the structural part.
 - **`components/`:** `LabelCombobox`, `RangeDialog`, `Toast`, `SelectionBadge`,
   `DayCell` (renders filler / empty / single / split-travel days), `MonthCard`
-  (one month, takes `year` + `month`). Each file has a default export.
+  (one month, takes `year` + `month`), `HolidayLegend` (the year's holidays +
+  loader status, below the calendar) and `HolidayStatus` (the status dot + text).
+  Each file has a default export.
 - **`App.jsx`:** owns all state (`ranges`, `year`, `selection`, `dialog`,
   `toast`); renders the 12 `MonthCard`s + year switcher; derives `dayToRanges`,
   `selectionSet`, `selectionBounds`; holds `validateNewRange` (create rules) and
