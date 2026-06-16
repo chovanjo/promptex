@@ -46,7 +46,7 @@ test.describe("creating ranges", () => {
     await expect(cell(page, "august", "2026-08-10").getByTestId("range-label")).toHaveText("Day off");
   });
 
-  test("a range can span the July/August boundary across the two grids", async ({ page }) => {
+  test("a range can span a month boundary across two month cards", async ({ page }) => {
     // Drag starts in the July grid and ends in the August grid.
     await createRange(page, cell(page, "july", "2026-07-30"), cell(page, "august", "2026-08-02"),
       "Cross month", "red");

@@ -1,7 +1,7 @@
 {
   "name": "holidays",
   "version": "1.0.0",
-  "description": "Holiday planner for July & August 2026 — Vite + React 19 app with Playwright tests",
+  "description": "Holiday planner — 12-month calendar for any year",
   "type": "module",
   "scripts": {
     "dev": "vite",

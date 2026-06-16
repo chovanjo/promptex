@@ -361,14 +361,20 @@ export default function App() {
         <div className="flex items-center gap-1">
           <button type="button" data-testid="year-prev" aria-label="Previous year"
             onClick={() => setYear((y) => y - 1)}
-            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 text-lg leading-none">
-            ‹
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 inline-flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={2} stroke="currentColor" className="w-5 h-5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
           </button>
           <span data-testid="year-display" className="text-xl font-bold tabular-nums w-16 text-center">{year}</span>
           <button type="button" data-testid="year-next" aria-label="Next year"
             onClick={() => setYear((y) => y + 1)}
-            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 text-lg leading-none">
-            ›
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 inline-flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={2} stroke="currentColor" className="w-5 h-5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
           </button>
         </div>
 
