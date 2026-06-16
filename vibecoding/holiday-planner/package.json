@@ -1,5 +1,5 @@
 {
-  "name": "holidays",
+  "name": "holiday-planner",
   "version": "1.0.0",
   "description": "Holiday planner — 12-month calendar for any year",
   "type": "module",
