@@ -9,13 +9,49 @@ import { expect } from "@playwright/test";
 export const TEST_YEAR = 2026;
 
 /**
+ * Stub the Czech public-holidays API (Nager.Date) so tests never hit the
+ * network and stay deterministic. By default returns a small year-aware
+ * fixture (Jan 1, Jul 5, Jul 6, Dec 25 of whatever year is requested).
+ *
+ * Options:
+ *   - status:  HTTP status to return (use 500 to exercise the error path),
+ *   - empty:   true → return [] (loaded OK but no holidays),
+ *   - delayMs: wait before fulfilling (to observe the loading state).
+ *
+ * Must be installed BEFORE navigation; openApp does this for every test.
+ */
+export async function stubHolidays(page, { status = 200, empty = false, delayMs = 0 } = {}) {
+  page.__holidaysStubbed = true; // so openApp won't add a default route on top
+  await page.route(/date\.nager\.at/, async (route) => {
+    if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+    if (status !== 200) {
+      await route.fulfill({ status });
+      return;
+    }
+    const year = route.request().url().match(/PublicHolidays\/(\d{4})\//)?.[1] || "2026";
+    const body = empty ? [] : [
+      { date: `${year}-01-01`, localName: "Nový rok", name: "New Year's Day" },
+      { date: `${year}-07-05`, localName: "Den slovanských věrozvěstů Cyrila a Metoděje", name: "Saints Cyril and Methodius Day" },
+      { date: `${year}-07-06`, localName: "Den upálení mistra Jana Husa", name: "Jan Hus Day" },
+      { date: `${year}-12-25`, localName: "1. svátek vánoční", name: "Christmas Day" },
+    ];
+    await route.fulfill({ json: body });
+  });
+}
+
+/**
  * Open the app, wait for React to render, and pin the calendar to
  * TEST_YEAR. Vite serves the compiled modules from the dev server
  * (started automatically by Playwright — see `webServer` in the config);
  * the base URL is set there, so we navigate to "/". The app defaults to
  * the *current* year, so we step it to TEST_YEAR for deterministic dates.
+ *
+ * The holidays API is stubbed first so no test touches the live network;
+ * a test wanting a different response calls `stubHolidays(page, opts)`
+ * itself BEFORE `openApp`.
  */
 export async function openApp(page) {
+  if (!page.__holidaysStubbed) await stubHolidays(page);
   await page.goto("/");
   await expect(page.getByTestId("month-january")).toBeVisible();
   await setYear(page, TEST_YEAR);

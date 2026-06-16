@@ -76,9 +76,11 @@ test.describe("calendar grid", () => {
     await expect(cell(page, "july", "2026-07-10")).not.toHaveClass(/bg-gray-50/);
   });
 
-  test("there are no public-holiday markers or legend", async ({ page }) => {
-    await expect(page.getByTestId("holiday-marker")).toHaveCount(0);
-    await expect(page.getByTestId("holiday-legend")).toHaveCount(0);
+  test("marks public holidays from the API", async ({ page }) => {
+    // openApp stubs CZ holidays (incl. Jul 5) for the pinned year.
+    await expect(cell(page, "july", "2026-07-05").getByTestId("holiday-marker")).toBeVisible();
+    // A non-holiday weekday has no marker.
+    await expect(cell(page, "july", "2026-07-07").getByTestId("holiday-marker")).toHaveCount(0);
   });
 
   test("shows a usage guide below the calendar", async ({ page }) => {

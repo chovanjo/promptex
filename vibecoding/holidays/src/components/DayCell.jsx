@@ -12,7 +12,7 @@
  * Empty days start a drag (onStartDrag); occupied days/halves open
  * the matching range for editing (onEditRange).
  */
-export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
+export default function DayCell({ day, ranges, holiday, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
   const { iso, dayNumber, inMonth, isWeekend } = day;
 
   // Filler days belong to an adjacent month (incl. the previous/next
@@ -28,6 +28,16 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
   }
 
   const isTravelDay = ranges.length === 2;
+
+  // A red dot in the top-right marks a public holiday (shown even when a
+  // trip covers the day). `holiday` is the Czech name, or undefined.
+  const holidayDot = holiday ? (
+    <span
+      data-testid="holiday-marker"
+      title={holiday}
+      className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500"
+    />
+  ) : null;
 
   // Travel day: two stacked, independently-clickable halves.
   if (isTravelDay) {
@@ -64,6 +74,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
         <Half range={arriving} testid="travel-arriving" />
         {/* Day number floats in the top-left over the leaving half. */}
         <span className="absolute top-0.5 left-1 text-sm text-gray-800">{dayNumber}</span>
+        {holidayDot}
       </div>
     );
   }
@@ -103,7 +114,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
     <div
       data-date={iso}
       className={classes.join(" ")}
-      title={range ? range.label : ""}
+      title={[range && range.label, holiday].filter(Boolean).join(" — ")}
       onMouseDown={(e) => {
         e.preventDefault(); // stop the browser from text-selecting while we drag
         // Begin a selection anchored here — on a free day OR on an
@@ -116,6 +127,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
       onMouseEnter={() => onMouseEnter(iso)}
     >
       <span>{dayNumber}</span>
+      {holidayDot}
       {range && (
         <div data-testid="range-label" className="text-xs font-semibold truncate">
           {range.label}

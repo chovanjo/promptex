@@ -8,7 +8,7 @@ import DayCell from "./DayCell.jsx";
  * The grid itself is just CSS Grid with 7 columns — each week from
  * `buildMonthGrid` flows naturally into one row.
  */
-export default function MonthCard({ name, year, month, dayToRanges, selectionSet, selectionBounds, onStartDrag, onEditRange, onDayMouseEnter }) {
+export default function MonthCard({ name, year, month, dayToRanges, holidays, selectionSet, selectionBounds, onStartDrag, onEditRange, onDayMouseEnter }) {
   // useMemo caches the computed grid: a given month/year never changes,
   // so there is no reason to rebuild it on every render.
   const weeks = useMemo(
@@ -45,6 +45,7 @@ export default function MonthCard({ name, year, month, dayToRanges, selectionSet
               key={day.iso}
               day={day}
               ranges={dayRanges}
+              holiday={holidays.get(day.iso)}
               isSelected={selectionSet.has(day.iso)}
               isSelectionStart={!!selectionBounds && day.iso === selectionBounds.start}
               isSelectionEnd={!!selectionBounds && day.iso === selectionBounds.end}

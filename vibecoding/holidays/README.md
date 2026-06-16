@@ -21,7 +21,7 @@ npm run build               # production build into dist/
 npm run preview             # serve the production build locally
 ```
 
-- **Tests** (Playwright, 84 e2e tests). Playwright starts the Vite dev server
+- **Tests** (Playwright, 94 e2e tests). Playwright starts the Vite dev server
   itself, so no separate step is needed:
   ```bash
   npx playwright install chromium   # once
@@ -36,7 +36,8 @@ npm run preview             # serve the production build locally
 
 - **Vite project, modular source.** App code lives under `src/` (see the Code
   map). `@vitejs/plugin-react` compiles the JSX and `@tailwindcss/vite` builds
-  the CSS — no in-browser Babel, no CDN scripts, no internet needed at runtime.
+  the CSS — no in-browser Babel, no CDN scripts. (Only the public-holiday
+  lookup hits the network at runtime; everything else works offline.)
 - **React 19** (`react` / `react-dom` from npm; mounted via
   `react-dom/client`).
 - **State is in-memory only.** Nothing is saved to `localStorage`/disk; use
@@ -71,7 +72,17 @@ npm run preview             # serve the production build locally
   year; December shows early January of the next). Filler days are inert
   placeholders: they aren't clickable and never hold a trip, so each real date
   has exactly one cell and every trip renders once.
-- Weekends get a subtle tint. (No public-holiday markers.)
+- Weekends get a subtle tint.
+
+**Public holidays**
+- Czech public holidays for the selected year are fetched from the free, keyless
+  **Nager.Date** API (`/api/v3/PublicHolidays/{year}/CZ`), cached per year and
+  reloaded when you change the year.
+- Each holiday shows a **red dot** on its day (visible even under a trip; the day's
+  tooltip has the Czech name) and is listed in a **legend** below the calendar.
+- The legend heading carries a **loader status** (dot + visible text) — amber
+  "Loading…", green "Loaded", red "Couldn't load". Holidays are informational only;
+  a failed/unknown year just shows none and the planner keeps working.
 
 **Creating & editing trips**
 - **Drag** across days to select a range (works **backwards** and **across month
@@ -135,6 +146,7 @@ src/
   constants.js          configuration values
   dateUtils.js          pure date/string helpers
   importSchema.js       JSON Schema + ajv validator for imported files
+  useHolidays.js        hook: fetch CZ public holidays per year (cache + status)
   App.jsx               the stateful root component
   components/           one presentational component per file
 ```
@@ -203,6 +215,10 @@ trip directly on mousedown.
   arrows, grid re-render, cross-year trip persistence, all-years export/clear).
 - **Only real days carry `data-date`** (filler days are inert), so
   `[data-date="…"]` resolves to one cell page-wide — handy for assertions.
+- **The holidays API is always stubbed** — `openApp` installs a `page.route` for
+  Nager.Date (via the `stubHolidays` helper) returning a fixed per-year fixture, so
+  the suite is deterministic and offline. `holidays.spec.js` re-stubs with options
+  to cover empty / error / loading states; never hit the live API in tests.
 - **Assert Tailwind class membership, not computed colour** — Tailwind 4 renders
   palette colours as `oklch()`, so `toHaveCSS("background-color", "rgb(...)")`
   is brittle; use `toHaveClass(/bg-blue-200/)` instead.
@@ -211,4 +227,5 @@ trip directly on mousedown.
   helper) before clicking a colour, or the click is intercepted.
 - **Imports require the current format:** colours must be Tailwind classes, so
   JSON exported before the pastel/classes refactor (hex colours) is rejected.
-- No internet is required at runtime — all dependencies are bundled by Vite.
+- Dependencies are bundled by Vite; the only runtime network call is the
+  public-holiday lookup, and the app degrades gracefully without it.

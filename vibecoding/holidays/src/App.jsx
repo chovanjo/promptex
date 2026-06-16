@@ -5,11 +5,13 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } fr
 import { MONTH_NAMES, DEFAULT_COLOR } from "./constants.js";
 import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
 import { validateRangesSchema } from "./importSchema.js";
+import { useHolidays } from "./useHolidays.js";
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
+import HolidayLegend from "./components/HolidayLegend.jsx";
 
 /**
  * The main <App /> component: the single "owner" of all shared state.
@@ -28,6 +30,10 @@ export default function App() {
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // Czech public holidays for the selected year (fetched + cached, with a
+  // load status surfaced in the header).
+  const { holidays, status: holidayStatus } = useHolidays(year);
 
   // Derived data:
   // A Map from ISO day → the ranges covering it, rebuilt only when
@@ -402,6 +408,7 @@ export default function App() {
             year={year}
             month={i + 1}
             dayToRanges={dayToRanges}
+            holidays={holidays}
             selectionSet={selectionSet}
             selectionBounds={selectionBounds}
             onStartDrag={handleStartDrag}
@@ -410,6 +417,9 @@ export default function App() {
           />
         ))}
       </div>
+
+      {/* The selected year's public holidays + loader status. */}
+      <HolidayLegend holidays={holidays} status={holidayStatus} />
 
       {/* A short how-to, below the calendar. */}
       <section data-testid="usage-guide" className="bg-white rounded-xl shadow p-4 text-sm text-gray-600">
