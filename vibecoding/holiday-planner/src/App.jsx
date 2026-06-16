@@ -267,7 +267,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "holidays.json"; // the whole plan (all years)
+    link.download = "holiday-planner.json"; // the whole plan (all years)
     link.click();
     URL.revokeObjectURL(url); // release the memory the Blob URL holds
   }

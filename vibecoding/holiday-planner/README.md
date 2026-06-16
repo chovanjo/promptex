@@ -111,7 +111,7 @@ npm run preview             # serve the production build locally
 **Feedback & data**
 - **Live selection feedback:** day cells use the hand (pointer) cursor; the
   in-progress drag is a blue pill with a floating "Jul 13 – Jul 17 · 5 days" badge.
-- **Export / Import JSON** (validated on import; exported as `holidays.json`,
+- **Export / Import JSON** (validated on import; exported as `holiday-planner.json`,
   the whole multi-year plan); **Clear all** (in-app confirm dialog — no native
   `alert`/`confirm` popups anywhere).
 

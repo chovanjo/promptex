@@ -21,7 +21,7 @@ test.describe("export, import and clear", () => {
     await page.getByTestId("export-btn").click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toBe("holidays.json");
+    expect(download.suggestedFilename()).toBe("holiday-planner.json");
     const data = JSON.parse(fs.readFileSync(await download.path(), "utf-8"));
 
     expect(data.ranges).toHaveLength(2);
