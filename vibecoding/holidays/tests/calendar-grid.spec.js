@@ -80,4 +80,11 @@ test.describe("calendar grid", () => {
     await expect(page.getByTestId("holiday-marker")).toHaveCount(0);
     await expect(page.getByTestId("holiday-legend")).toHaveCount(0);
   });
+
+  test("shows a usage guide below the calendar", async ({ page }) => {
+    const guide = page.getByTestId("usage-guide");
+    await expect(guide).toBeVisible();
+    await expect(guide).toContainText("How to use");
+    await expect(guide).toContainText("Travel day");
+  });
 });

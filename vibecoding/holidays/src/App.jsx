@@ -350,15 +350,11 @@ export default function App() {
     <div className="p-6">
       {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div>
+        {/* Title + year switcher together on the left. */}
+        <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Holiday Planner</h1>
-          <p className="text-sm text-gray-500">
-            Drag across days to create a range · click a range to edit it · drag onto a trip's edge for a travel day
-          </p>
-        </div>
-
-        {/* Year switcher: step the whole 12-month calendar a year at a time. */}
-        <div className="flex items-center gap-1">
+          {/* Year switcher: step the whole 12-month calendar a year at a time. */}
+          <div className="flex items-center gap-1">
           <button type="button" data-testid="year-prev" aria-label="Previous year"
             onClick={() => setYear((y) => y - 1)}
             className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 inline-flex items-center justify-center">
@@ -376,6 +372,7 @@ export default function App() {
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
+          </div>
         </div>
 
         <div className="flex gap-2">
@@ -413,6 +410,18 @@ export default function App() {
           />
         ))}
       </div>
+
+      {/* A short how-to, below the calendar. */}
+      <section data-testid="usage-guide" className="bg-white rounded-xl shadow p-4 text-sm text-gray-600">
+        <h2 className="font-semibold text-gray-800 mb-2">How to use</h2>
+        <ul className="space-y-1">
+          <li><strong>Add a trip:</strong> drag across days (or click a single day), then type a label, pick a colour, and Save.</li>
+          <li><strong>Edit or delete:</strong> click a trip to change its label or colour, or remove it with Delete.</li>
+          <li><strong>Travel day:</strong> drag a new trip onto another trip's first or last day — that shared day splits in two (leaving / arriving).</li>
+          <li><strong>Change year:</strong> use the ‹ › arrows by the year.</li>
+          <li><strong>Save or share:</strong> Export / Import JSON; Clear all starts over.</li>
+        </ul>
+      </section>
 
       {/* Overlays (rendered only when needed) */}
       {dialog && (
