@@ -2,14 +2,17 @@
 // `React` object; with Vite we import them directly from the package.
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
-import { YEAR, MONTHS, DEFAULT_COLOR } from "./constants.js";
-import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
+import { MONTH_NAMES, DEFAULT_COLOR } from "./constants.js";
+import { toISO, fromISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
+import { validateRangesSchema } from "./importSchema.js";
+import { useHolidays } from "./useHolidays.js";
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
-import HolidayLegend from "./components/HolidayLegend.jsx";
+import ConfirmDialog from "./components/ConfirmDialog.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
+import HolidayLegend from "./components/HolidayLegend.jsx";
 
 /**
  * The main <App /> component: the single "owner" of all shared state.
@@ -19,13 +22,20 @@ import SelectionBadge from "./components/SelectionBadge.jsx";
 export default function App() {
   // State:
   //   ranges:    the saved holiday ranges (the app's core data)
+  //   year:      which year the calendar shows (defaults to this year)
   //   selection: { anchor, hover } while a drag is in progress, else null
   //   dialog:    config of the open dialog, else null
   //   toast:     { message, type } for the notification, else null
   const [ranges, setRanges] = useState([]);
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
+  const [confirm, setConfirm] = useState(null); // { message, confirmLabel, onConfirm } | null
   const [toast, setToast] = useState(null);
+
+  // Czech public holidays for the selected year (fetched + cached, with a
+  // load status surfaced in the header).
+  const { holidays, status: holidayStatus } = useHolidays(year);
 
   // Derived data:
   // A Map from ISO day → the ranges covering it, rebuilt only when
@@ -36,8 +46,8 @@ export default function App() {
   const dayToRanges = useMemo(() => {
     const map = new Map();
     for (const range of ranges) {
-      let cursor = new Date(range.start);
-      const last = new Date(range.end);
+      let cursor = fromISO(range.start);
+      const last = fromISO(range.end);
       while (cursor <= last) {
         const iso = toISO(cursor);
         if (!map.has(iso)) map.set(iso, []);
@@ -54,8 +64,8 @@ export default function App() {
     const set = new Set();
     if (selection) {
       const [start, end] = normalizeRange(selection.anchor, selection.hover);
-      let cursor = new Date(start);
-      const last = new Date(end);
+      let cursor = fromISO(start);
+      const last = fromISO(end);
       while (cursor <= last) {
         set.add(toISO(cursor));
         cursor = addDays(cursor, 1);
@@ -101,7 +111,7 @@ export default function App() {
   function validateNewRange(start, end) {
     for (const r of ranges) {
       if (overlapKind(start, end, r.start, r.end) === "full") {
-        return `Overlaps "${r.label}" — ranges cannot overlap.`;
+        return `Overlaps "${r.label}" - ranges cannot overlap.`;
       }
     }
     // Count how many existing ranges already touch each boundary day
@@ -257,7 +267,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `holidays-${YEAR}.json`;
+    link.download = "holidays.json"; // the whole plan (all years)
     link.click();
     URL.revokeObjectURL(url); // release the memory the Blob URL holds
   }
@@ -266,21 +276,14 @@ export default function App() {
       user-supplied file has the right shape — check everything and
       reject with a clear message if anything is off. */
   function validateImportedRanges(data) {
-    if (!data || !Array.isArray(data.ranges)) {
-      return "File must contain a { ranges: [...] } object.";
-    }
-    const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
-    // Colors are Tailwind background classes like "bg-blue-200" —
-    // anything else would silently render as an unstyled range.
-    const colorPattern = /^bg-[a-z]+-\d{2,3}$/;
+    // Structure (shape, types, date format, colour pattern) is checked
+    // against a JSON Schema; see src/importSchema.js.
+    const schemaError = validateRangesSchema(data);
+    if (schemaError) return schemaError;
+
+    // The rest are domain rules a schema can't express. With the schema
+    // passed, every start/end is a real YYYY-MM-DD date.
     for (const r of data.ranges) {
-      if (typeof r.label !== "string" ||
-          !isoPattern.test(r.start || "") || !isoPattern.test(r.end || "")) {
-        return "Each range needs label, color, start and end (YYYY-MM-DD).";
-      }
-      if (!colorPattern.test(r.color || "")) {
-        return `Range "${r.label}" has an invalid color — expected a Tailwind class like "bg-blue-200".`;
-      }
       if (r.start > r.end) return `Range "${r.label}" ends before it starts.`;
     }
     // Reject true (multi-day) overlaps — a single shared boundary
@@ -296,8 +299,8 @@ export default function App() {
     // No day may hold more than two trips (one leaving, one arriving).
     const perDay = {};
     for (const r of data.ranges) {
-      let cursor = new Date(r.start);
-      const last = new Date(r.end);
+      let cursor = fromISO(r.start);
+      const last = fromISO(r.end);
       while (cursor <= last) {
         const iso = toISO(cursor);
         perDay[iso] = (perDay[iso] || 0) + 1;
@@ -338,12 +341,16 @@ export default function App() {
   }
 
   function handleClearAll() {
-    // window.confirm is a simple built-in guard for destructive
-    // actions — fine for a small app like this one.
-    if (window.confirm("Remove all ranges?")) {
-      setRanges([]);
-      showToast("All ranges cleared.");
-    }
+    // Confirm via an in-app dialog (no native window.confirm); the actual
+    // clear happens in onConfirm.
+    setConfirm({
+      message: "Remove all ranges?",
+      confirmLabel: "Clear all",
+      onConfirm: () => {
+        setRanges([]);
+        showToast("All ranges cleared.");
+      },
+    });
   }
 
   // Render. A hidden <input type="file"> does the real file picking; the
@@ -352,15 +359,34 @@ export default function App() {
   const importInputRef = useRef(null);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      {/* Header with title and toolbar */}
+    <div className="p-6">
+      {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Holiday Planner {YEAR}</h1>
-          <p className="text-sm text-gray-500">
-            Drag across days to create a range · click a range to edit it · drag onto a trip's edge for a travel day
-          </p>
+        {/* Title + year switcher together on the left. */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Holiday Planner</h1>
+          {/* Year switcher: step the whole 12-month calendar a year at a time. */}
+          <div className="flex items-center gap-1">
+          <button type="button" data-testid="year-prev" aria-label="Previous year"
+            onClick={() => setYear((y) => y - 1)}
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 inline-flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={2} stroke="currentColor" className="w-5 h-5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <span data-testid="year-display" className="text-xl font-bold tabular-nums w-16 text-center">{year}</span>
+          <button type="button" data-testid="year-next" aria-label="Next year"
+            onClick={() => setYear((y) => y + 1)}
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 inline-flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={2} stroke="currentColor" className="w-5 h-5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+          </div>
         </div>
+
         <div className="flex gap-2">
           <button type="button" data-testid="export-btn" onClick={handleExport}
             className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm font-medium">
@@ -379,15 +405,16 @@ export default function App() {
         </div>
       </header>
 
-      {/* The two month calendars */}
-      <div className="flex flex-wrap gap-6 mb-6">
-        {MONTHS.map((monthConfig) => (
+      {/* The full year: one card per month, like a wall calendar. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {MONTH_NAMES.map((name, i) => (
           <MonthCard
-            key={monthConfig.month}
-            name={monthConfig.name}
-            month={monthConfig.month}
-            gridOptions={monthConfig}
+            key={name}
+            name={name}
+            year={year}
+            month={i + 1}
             dayToRanges={dayToRanges}
+            holidays={holidays}
             selectionSet={selectionSet}
             selectionBounds={selectionBounds}
             onStartDrag={handleStartDrag}
@@ -397,8 +424,20 @@ export default function App() {
         ))}
       </div>
 
-      {/* Holiday legend */}
-      <HolidayLegend />
+      {/* The selected year's public holidays + loader status. */}
+      <HolidayLegend holidays={holidays} status={holidayStatus} />
+
+      {/* A short how-to, below the calendar. */}
+      <section data-testid="usage-guide" className="bg-white rounded-xl shadow p-4 text-sm text-gray-600">
+        <h2 className="font-semibold text-gray-800 mb-2">How to use</h2>
+        <ul className="space-y-1">
+          <li><strong>Add a trip:</strong> drag across days (or click a single day), then type a label, pick a colour, and Save.</li>
+          <li><strong>Edit or delete:</strong> click a trip to change its label or colour, or remove it with Delete.</li>
+          <li><strong>Travel day:</strong> drag a new trip onto another trip's first or last day - that shared day splits in two (leaving / arriving).</li>
+          <li><strong>Change year:</strong> use the arrows next to the year.</li>
+          <li><strong>Save or share:</strong> Export / Import JSON; Clear all starts over.</li>
+        </ul>
+      </section>
 
       {/* Overlays (rendered only when needed) */}
       {dialog && (
@@ -411,6 +450,14 @@ export default function App() {
           onSave={handleDialogSave}
           onDelete={handleDialogDelete}
           onCancel={closeDialog}
+        />
+      )}
+      {confirm && (
+        <ConfirmDialog
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          onConfirm={() => { confirm.onConfirm(); setConfirm(null); }}
+          onCancel={() => setConfirm(null)}
         />
       )}
       <Toast toast={toast} />

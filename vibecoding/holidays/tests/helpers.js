@@ -4,23 +4,77 @@
 // Playwright never runs it directly.
 import { expect } from "@playwright/test";
 
+/** The year the suite pins the calendar to (see openApp). Fixed so
+    date-based tests stay deterministic no matter the real clock. */
+export const TEST_YEAR = 2026;
+
 /**
- * Open the app and wait until React has actually rendered.
- * Vite serves the compiled modules from the dev server (started
- * automatically by Playwright — see `webServer` in the config); the
- * base URL is set there, so we navigate to "/". There is still a
- * short moment where the page is loaded but React has not mounted yet.
+ * Stub the Czech public-holidays API (Nager.Date) so tests never hit the
+ * network and stay deterministic. By default returns a small year-aware
+ * fixture (Jan 1, Jul 5, Jul 6, Dec 25 of whatever year is requested).
+ *
+ * Options:
+ *   - status:  HTTP status to return (use 500 to exercise the error path),
+ *   - empty:   true → return [] (loaded OK but no holidays),
+ *   - delayMs: wait before fulfilling (to observe the loading state).
+ *
+ * Must be installed BEFORE navigation; openApp does this for every test.
  */
-export async function openApp(page) {
-  await page.goto("/");
-  await expect(page.getByTestId("month-july")).toBeVisible();
+export async function stubHolidays(page, { status = 200, empty = false, delayMs = 0 } = {}) {
+  page.__holidaysStubbed = true; // so openApp won't add a default route on top
+  await page.route(/date\.nager\.at/, async (route) => {
+    if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+    if (status !== 200) {
+      await route.fulfill({ status });
+      return;
+    }
+    const year = route.request().url().match(/PublicHolidays\/(\d{4})\//)?.[1] || "2026";
+    const body = empty ? [] : [
+      { date: `${year}-01-01`, localName: "Nový rok", name: "New Year's Day" },
+      { date: `${year}-07-05`, localName: "Den slovanských věrozvěstů Cyrila a Metoděje", name: "Saints Cyril and Methodius Day" },
+      { date: `${year}-07-06`, localName: "Den upálení mistra Jana Husa", name: "Jan Hus Day" },
+      { date: `${year}-12-25`, localName: "1. svátek vánoční", name: "Christmas Day" },
+    ];
+    await route.fulfill({ json: body });
+  });
 }
 
 /**
- * Locator for one day cell, scoped to a month grid.
- * Scoping matters: dates near month boundaries exist in BOTH grids
- * (e.g. Jul 30 is a real day in July and a filler day in August), so a
- * bare [data-date=…] selector would match two elements.
+ * Open the app, wait for React to render, and pin the calendar to
+ * TEST_YEAR. Vite serves the compiled modules from the dev server
+ * (started automatically by Playwright — see `webServer` in the config);
+ * the base URL is set there, so we navigate to "/". The app defaults to
+ * the *current* year, so we step it to TEST_YEAR for deterministic dates.
+ *
+ * The holidays API is stubbed first so no test touches the live network;
+ * a test wanting a different response calls `stubHolidays(page, opts)`
+ * itself BEFORE `openApp`.
+ */
+export async function openApp(page) {
+  if (!page.__holidaysStubbed) await stubHolidays(page);
+  await page.goto("/");
+  await expect(page.getByTestId("month-january")).toBeVisible();
+  await setYear(page, TEST_YEAR);
+}
+
+/**
+ * Step the year switcher until `year-display` shows `target`.
+ * Clicks `year-next` / `year-prev` as needed.
+ */
+export async function setYear(page, target) {
+  const display = page.getByTestId("year-display");
+  for (let guard = 0; guard < 60; guard++) {
+    const current = parseInt((await display.textContent()).trim(), 10);
+    if (current === target) return;
+    await page.getByTestId(current < target ? "year-next" : "year-prev").click();
+  }
+  throw new Error(`Could not reach year ${target}`);
+}
+
+/**
+ * Locator for one real day cell, scoped to a month grid. Only in-month
+ * days carry `data-date` (filler days are inert placeholders), so a date
+ * resolves to exactly one cell; the month scope just keeps intent clear.
  */
 export function cell(page, month, iso) {
   return page.getByTestId(`month-${month}`).locator(`[data-date="${iso}"]`);
@@ -59,6 +113,17 @@ export async function createRange(page, fromCell, toCell, label, presetName = "b
   await page.getByTestId(`color-${presetName}`).click();
   await page.getByTestId("save-btn").click();
   await expect(page.getByTestId("range-dialog")).not.toBeVisible();
+}
+
+/**
+ * Click "Clear all" and resolve its in-app confirm dialog: accept by
+ * default, or pass { confirm: false } to dismiss it (keeping the plan).
+ */
+export async function clearAll(page, { confirm = true } = {}) {
+  await page.getByTestId("clear-btn").click();
+  await expect(page.getByTestId("confirm-dialog")).toBeVisible();
+  await page.getByTestId(confirm ? "confirm-accept" : "confirm-cancel").click();
+  await expect(page.getByTestId("confirm-dialog")).not.toBeVisible();
 }
 
 /** The app stores colors as Tailwind background classes (see

@@ -5,8 +5,6 @@
 // the parts run year → month → day with fixed widths, plain string
 // comparison ("<", ">") sorts dates correctly — no Date math needed.
 
-import { CZ_HOLIDAYS } from "./constants.js";
-
 /** Convert a JavaScript Date to an ISO date string ("2026-07-13").
     We build it manually from the *local* date parts; using
     `date.toISOString()` would convert to UTC and could shift the
@@ -16,6 +14,15 @@ export function toISO(date) {
   const m = String(date.getMonth() + 1).padStart(2, "0"); // 0-based → 1-based
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+/** Parse an ISO date string ("2026-07-13") into a *local* midnight Date.
+    `new Date("2026-07-13")` would parse as UTC midnight, which then reads
+    back as the previous day via the local `toISO` for users west of UTC —
+    so we build the Date from local parts instead. */
+export function fromISO(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 /** Return a new Date that is `days` after `date` (negative = before).
@@ -43,17 +50,10 @@ export function formatShort(iso) {
 
 /** Number of days in an inclusive ISO range, e.g. Jul 13–17 → 5. */
 export function countDays(startIso, endIso) {
-  const start = new Date(startIso);
-  const end = new Date(endIso);
+  const start = fromISO(startIso);
+  const end = fromISO(endIso);
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   return Math.round((end - start) / MS_PER_DAY) + 1;
-}
-
-/** Do two inclusive ranges share at least one day?
-    Classic interval-overlap test: they overlap unless one ends
-    before the other starts. Works on ISO strings directly. */
-export function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return aStart <= bEnd && bStart <= aEnd;
 }
 
 /**
@@ -81,36 +81,28 @@ export function normalizeRange(a, b) {
 }
 
 /**
- * Build the full calendar grid for one month.
+ * Build the full calendar grid for one month (a standard, self-contained
+ * month view — Monday-first, padded with adjacent-month filler days).
  *
  * Returns an array of weeks; each week is an array of 7 "day" objects:
  *   { iso:        "2026-07-13"  — unique id for the day,
  *     dayNumber:  13            — what to print in the cell,
  *     inMonth:    true          — false for filler days from the
  *                                 previous/next month (rendered dimmed),
- *     isWeekend:  false,
- *     holiday:    "Jan Hus Day" | null }
+ *     isWeekend:  false }
  *
- * Algorithm: start from the 1st of the month, walk back to the
- * nearest Monday, then emit complete weeks until we have passed the
- * last day of the month. This naturally produces the filler days
- * (e.g. Jun 29–30 before Jul 1, or Sep 1–6 after Aug 31).
- *
- * `extraWeeksBefore` (optional) prepends that many additional full
- * weeks of filler days — used to extend July back into late June.
- *
- * `hideBefore` / `hideAfter` (optional ISO dates) mark days outside
- * that window as `hidden` — the calendar renders them as empty
- * placeholder cells. Used so the Jul/Aug boundary week is not
- * shown twice (once per card).
+ * Algorithm: start from the 1st of the month, walk back to the nearest
+ * Monday, then emit complete weeks until we have passed the last day of
+ * the month. This naturally produces the leading/trailing filler days —
+ * including across year boundaries (January leads with late December of
+ * the previous year; December trails with early January of the next).
  */
-export function buildMonthGrid(year, month, { extraWeeksBefore = 0, hideBefore = "", hideAfter = "" } = {}) {
+export function buildMonthGrid(year, month) {
   const firstOfMonth = new Date(year, month - 1, 1);
   const lastOfMonth = new Date(year, month, 0); // day 0 of next month = last day of this one
 
-  // Walk back from the 1st to the Monday that starts its week,
-  // then further back by the requested number of extra weeks.
-  let cursor = addDays(firstOfMonth, -mondayIndex(firstOfMonth) - extraWeeksBefore * 7);
+  // Walk back from the 1st to the Monday that starts its week.
+  let cursor = addDays(firstOfMonth, -mondayIndex(firstOfMonth));
 
   const weeks = [];
   // Keep emitting weeks until the week we just finished contains the
@@ -118,16 +110,11 @@ export function buildMonthGrid(year, month, { extraWeeksBefore = 0, hideBefore =
   while (cursor <= lastOfMonth) {
     const week = [];
     for (let i = 0; i < 7; i++) {
-      const iso = toISO(cursor);
       week.push({
-        iso,
+        iso: toISO(cursor),
         dayNumber: cursor.getDate(),
         inMonth: cursor.getMonth() === month - 1,
         isWeekend: mondayIndex(cursor) >= 5, // Sat (5) or Sun (6)
-        holiday: CZ_HOLIDAYS[iso] || null,
-        // Hidden days keep their slot in the grid (so columns stay
-        // aligned) but are rendered as empty placeholder cells.
-        hidden: (hideBefore && iso < hideBefore) || (hideAfter && iso > hideAfter),
       });
       cursor = addDays(cursor, 1);
     }
@@ -137,7 +124,7 @@ export function buildMonthGrid(year, month, { extraWeeksBefore = 0, hideBefore =
 }
 
 /** Strip accents so filtering is diacritics-insensitive: typing
-    "ta" should find "Tábor". `normalize("NFD")` splits each
+    "gre" should find "Grécko". `normalize("NFD")` splits each
     accented letter into base letter + combining accent mark, and
     the regex removes those marks (Unicode range U+0300–U+036F). */
 export function stripDiacritics(text) {

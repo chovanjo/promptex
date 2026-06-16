@@ -37,14 +37,17 @@ export default function LabelCombobox({ value, onChange, options, placeholder })
     inputRef.current.focus();
   }, []);
 
+  // Suggestions are always shown A–Z (locale-aware, so accented letters
+  // sort sensibly).
+  const sortedOptions = [...options].sort((a, b) => a.localeCompare(b));
   // While typing, show only the options matching the text (case-
   // and accent-insensitive); when nothing matches, the panel
   // disappears. When the panel was merely (re)opened — not typed
   // into — show the complete list regardless of the current value.
   const query = stripDiacritics(value.trim().toLowerCase());
   const visibleOptions = typedSinceOpen
-    ? options.filter((option) => stripDiacritics(option.toLowerCase()).includes(query))
-    : options;
+    ? sortedOptions.filter((option) => stripDiacritics(option.toLowerCase()).includes(query))
+    : sortedOptions;
   const panelVisible = open && visibleOptions.length > 0;
 
   // Pressing the mouse anywhere outside the combobox (Save button,

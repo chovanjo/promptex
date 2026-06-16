@@ -1,60 +1,72 @@
-// Calendar grid layout: weekday headers, the extra June week, the
-// de-duplicated Jul/Aug boundary, filler/weekend tints, and holidays.
+// Calendar grid layout: all 12 months for the selected year, Monday-first
+// weeks, greyed adjacent-month filler (incl. the previous/next year at the
+// January/December edges), and no public holidays.
 import { test, expect } from "@playwright/test";
-import { openApp, cell, createRange } from "./helpers.js";
+import { openApp, cell } from "./helpers.js";
+
+const MONTHS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december",
+];
 
 test.beforeEach(async ({ page }) => {
-  await openApp(page);
+  await openApp(page); // pins the year to 2026
 });
 
 test.describe("calendar grid", () => {
-  test("shows Monday-first weekday headers in both months", async ({ page }) => {
-    for (const month of ["july", "august"]) {
-      const headers = page.getByTestId(`month-${month}`).locator(".grid").first().locator("div");
+  test("renders all twelve month cards", async ({ page }) => {
+    for (const m of MONTHS) {
+      await expect(page.getByTestId(`month-${m}`)).toBeVisible();
+    }
+  });
+
+  test("each month shows Monday-first weekday headers", async ({ page }) => {
+    for (const m of ["january", "july", "december"]) {
+      const headers = page.getByTestId(`month-${m}`).locator(".grid").first().locator("div");
       await expect(headers).toHaveText(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
     }
   });
 
-  test("July grid runs Jun 22 – Jul 31 with Jul 1 on Wednesday", async ({ page }) => {
-    const days = page.getByTestId("month-july").locator("[data-date]");
-    await expect(days).toHaveCount(40); // 6 weeks minus the 2 blanked Aug days
+  test("July 2026 has 31 real days starting in the Wednesday column", async ({ page }) => {
+    const july = page.getByTestId("month-july");
+    const days = july.locator("[data-date]");
+    await expect(days).toHaveCount(31);
+    await expect(days.first()).toHaveAttribute("data-date", "2026-07-01");
+    await expect(days.last()).toHaveAttribute("data-date", "2026-07-31");
 
-    // One full extra June week (Jun 22–28) precedes July's own first week.
-    await expect(days.nth(0)).toHaveAttribute("data-date", "2026-06-22");
-    await expect(days.nth(7)).toHaveAttribute("data-date", "2026-06-29");
-    // Jul 1 sits in the Wednesday column of the second displayed week.
-    await expect(days.nth(9)).toHaveAttribute("data-date", "2026-07-01");
-    // Last real cell is Jul 31; Aug 1–2 are blank placeholders because
-    // those dates belong to the August card.
-    await expect(days.nth(39)).toHaveAttribute("data-date", "2026-07-31");
-    await expect(page.getByTestId("month-july").getByTestId("blank-day")).toHaveCount(2);
+    // Jul 1 2026 is a Wednesday: the first week is Mon Jun 29, Tue Jun 30,
+    // then Jul 1 in the third (Wednesday) column. The two June cells are
+    // greyed filler.
+    const grid = july.locator(".grid").last();
+    await expect(grid.locator("> div").nth(0)).toHaveAttribute("data-testid", "filler-day");
+    await expect(grid.locator("> div").nth(1)).toHaveAttribute("data-testid", "filler-day");
+    await expect(grid.locator("> div").nth(2)).toHaveAttribute("data-date", "2026-07-01");
   });
 
-  test("August grid runs Aug 1 – Sep 6 (September filler in the last week)", async ({ page }) => {
-    const days = page.getByTestId("month-august").locator("[data-date]");
-    await expect(days).toHaveCount(37); // 6 weeks minus the 5 blanked Jul days
-
-    // Aug 1 is a Saturday — the Mon–Fri slots before it are blank
-    // placeholders (those July dates live in the July card).
-    await expect(days.nth(0)).toHaveAttribute("data-date", "2026-08-01");
-    await expect(page.getByTestId("month-august").getByTestId("blank-day")).toHaveCount(5);
-    // Aug 31 is a Monday; Sep 1–6 complete the final week.
-    await expect(days.nth(30)).toHaveAttribute("data-date", "2026-08-31");
-    await expect(days.nth(36)).toHaveAttribute("data-date", "2026-09-06");
-  });
-
-  test("no date appears in both month grids", async ({ page }) => {
-    // The whole boundary week used to be duplicated; now each date
-    // exists exactly once across the entire page.
-    for (const iso of ["2026-07-27", "2026-07-30", "2026-07-31", "2026-08-01", "2026-08-02"]) {
+  test("each real date appears exactly once across the whole page", async ({ page }) => {
+    // Filler cells carry no data-date, so a boundary date resolves to one
+    // element (its owning month), never duplicated as filler elsewhere.
+    for (const iso of ["2026-01-31", "2026-07-31", "2026-08-01", "2026-12-31"]) {
       await expect(page.locator(`[data-date="${iso}"]`)).toHaveCount(1);
     }
   });
 
-  test("filler days are dimmed, in-month days are not", async ({ page }) => {
-    // Jun 30 is a filler day in July's grid → gray text class.
-    await expect(cell(page, "july", "2026-06-30")).toHaveClass(/text-gray-400/);
-    await expect(cell(page, "july", "2026-07-01")).not.toHaveClass(/text-gray-400/);
+  test("January overlaps into the previous year (late Dec 2025 as filler)", async ({ page }) => {
+    const jan = page.getByTestId("month-january");
+    await expect(jan.locator("[data-date]")).toHaveCount(31);
+    // Jan 1 2026 is a Thursday, so the first week leads with Dec 29–31 2025
+    // shown as greyed filler — those previous-year days are NOT real cells.
+    await expect(jan.getByTestId("filler-day").first()).toHaveText("29");
+    await expect(page.locator('[data-date^="2025-"]')).toHaveCount(0);
+  });
+
+  test("December overlaps into the next year (early Jan 2027 as filler)", async ({ page }) => {
+    const dec = page.getByTestId("month-december");
+    await expect(dec.locator("[data-date]")).toHaveCount(31);
+    // Dec 31 2026 is a Thursday, so the last week trails with Jan 1–3 2027
+    // as greyed filler — those next-year days are NOT real cells.
+    await expect(dec.getByTestId("filler-day").last()).toHaveText("3");
+    await expect(page.locator('[data-date^="2027-"]')).toHaveCount(0);
   });
 
   test("weekend days get the subtle gray tint, weekdays stay white", async ({ page }) => {
@@ -64,28 +76,17 @@ test.describe("calendar grid", () => {
     await expect(cell(page, "july", "2026-07-10")).not.toHaveClass(/bg-gray-50/);
   });
 
-  test("marks the Czech public holidays (Jul 5 and Jul 6)", async ({ page }) => {
+  test("marks public holidays from the API", async ({ page }) => {
+    // openApp stubs CZ holidays (incl. Jul 5) for the pinned year.
     await expect(cell(page, "july", "2026-07-05").getByTestId("holiday-marker")).toBeVisible();
-    await expect(cell(page, "july", "2026-07-06").getByTestId("holiday-marker")).toBeVisible();
-    // An ordinary day has no marker.
+    // A non-holiday weekday has no marker.
     await expect(cell(page, "july", "2026-07-07").getByTestId("holiday-marker")).toHaveCount(0);
-    // The hover tooltip was replaced by the legend, so no title here.
-    await expect(cell(page, "july", "2026-07-06")).toHaveAttribute("title", "");
   });
 
-  test("shows a legend naming each public holiday", async ({ page }) => {
-    const legend = page.getByTestId("holiday-legend");
-    await expect(legend).toBeVisible();
-    await expect(legend).toContainText("Jul 5 — Saints Cyril and Methodius Day");
-    await expect(legend).toContainText("Jul 6 — Jan Hus Day");
-  });
-
-  test("the holiday marker still shows on a day covered by a range", async ({ page }) => {
-    // Painting a range over Jul 5–6 must not hide their holiday dots.
-    await createRange(page, cell(page, "july", "2026-07-04"), cell(page, "july", "2026-07-06"),
-      "Long weekend", "green");
-
-    await expect(cell(page, "july", "2026-07-05").getByTestId("holiday-marker")).toBeVisible();
-    await expect(cell(page, "july", "2026-07-06").getByTestId("holiday-marker")).toBeVisible();
+  test("shows a usage guide below the calendar", async ({ page }) => {
+    const guide = page.getByTestId("usage-guide");
+    await expect(guide).toBeVisible();
+    await expect(guide).toContainText("How to use");
+    await expect(guide).toContainText("Travel day");
   });
 });

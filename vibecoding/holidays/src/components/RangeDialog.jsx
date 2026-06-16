@@ -42,12 +42,11 @@ export default function RangeDialog({ mode, start, end, initialLabel, initialCol
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
       <div data-testid="range-dialog" className="bg-white rounded-xl shadow-xl p-6 w-80" onKeyDown={handleKeyDown}>
-        <h3 className="font-bold text-lg mb-1">
-          {mode === "create" ? "New range" : "Edit range"}
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">
+        {/* The range itself is the heading — its dates in bold, with the
+            day count. (Create vs edit is conveyed by the Delete button.) */}
+        <h3 className="font-bold text-lg mb-4">
           {formatShort(start)} – {formatShort(end)} · {countDays(start, end)} day{countDays(start, end) > 1 ? "s" : ""}
-        </p>
+        </h3>
 
         {/* Label: a combobox — suggestions in a styled dropdown,
             free custom text still allowed. */}

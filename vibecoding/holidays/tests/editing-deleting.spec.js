@@ -19,9 +19,9 @@ test.describe("editing and deleting ranges", () => {
     await cell(page, "july", "2026-07-15").click(); // middle of the range
     const dialog = page.getByTestId("range-dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText("Edit range");
-    // The form is pre-filled with the current label.
+    // Edit mode: prefilled label + a Delete button.
     await expect(page.getByTestId("label-input")).toHaveValue("Original");
+    await expect(page.getByTestId("delete-btn")).toBeVisible();
   });
 
   test("renaming and recoloring updates the calendar", async ({ page }) => {

@@ -1,10 +1,10 @@
-# Holiday Planner 2026
+# Holiday Planner
 
-A holiday planner for **July & August 2026**: drag across days to create
-labelled, colour-coded trips, and mark "travel days" where one trip ends as the
-next begins. Built with **Vite** + **React 19** + **Tailwind CSS 4** — JSX and
-Tailwind are compiled ahead of time, so there are no CDN scripts and nothing is
-compiled in the browser.
+A holiday planner showing a **full 12-month calendar** for any year: pick the
+year, drag across days to create labelled, colour-coded trips, and mark "travel
+days" where one trip ends as the next begins. Built with **Vite** + **React 19**
++ **Tailwind CSS 4** — JSX and Tailwind are compiled ahead of time, so there are
+no CDN scripts and nothing is compiled in the browser.
 
 > This file is the project's source of truth for anyone (human or AI assistant)
 > picking it up. It describes what the app does, how it's built, and the
@@ -15,13 +15,13 @@ compiled in the browser.
 ## Run it
 
 ```bash
-npm install                 # React, Vite, Tailwind, Playwright
+npm install                 # React, Vite, Tailwind, ajv, Playwright
 npm run dev                 # start the dev server, then open the printed URL
 npm run build               # production build into dist/
 npm run preview             # serve the production build locally
 ```
 
-- **Tests** (Playwright, 76 e2e tests). Playwright starts the Vite dev server
+- **Tests** (Playwright, 94 e2e tests). Playwright starts the Vite dev server
   itself, so no separate step is needed:
   ```bash
   npx playwright install chromium   # once
@@ -36,38 +36,61 @@ npm run preview             # serve the production build locally
 
 - **Vite project, modular source.** App code lives under `src/` (see the Code
   map). `@vitejs/plugin-react` compiles the JSX and `@tailwindcss/vite` builds
-  the CSS — no in-browser Babel, no CDN scripts, no internet needed at runtime.
+  the CSS — no in-browser Babel, no CDN scripts. (Only the public-holiday
+  lookup hits the network at runtime; everything else works offline.)
 - **React 19** (`react` / `react-dom` from npm; mounted via
   `react-dom/client`).
 - **State is in-memory only.** Nothing is saved to `localStorage`/disk; use
   **Export / Import JSON** to persist or share a plan.
+- **One plan spans all years.** Trips carry absolute ISO dates; the calendar
+  shows the selected year, but every year's trips stay in memory and in the
+  export. Export / Import / Clear act on the whole plan.
+- **Import is validated.** The file *structure* is checked against a JSON Schema
+  (`src/importSchema.js`, via **ajv** + ajv-formats) — shape, types, a real
+  `date` format, and the colour pattern. The travel-day domain rules a schema
+  can't express (start ≤ end, no multi-day overlap, ≤ 2 trips/day) stay in
+  `validateImportedRanges`.
 - **Styling is Tailwind classes only — no custom CSS and no inline `style`.**
   Colours are stored as Tailwind classes (e.g. `bg-blue-200`), not hex. Because
   colours are applied dynamically, the preset classes are written out as full
   literal strings in `src/constants.js` so Tailwind's build-time scanner emits
   them.
-- **Dates are hardcoded to 2026** (`YEAR` constant).
+- **Year is chosen at runtime** (defaults to the current year); no date is
+  hardcoded.
 
 ---
 
 ## Features
 
 **Calendar**
-- July and August 2026 side by side, **Monday-first** weeks.
-- July also shows an **extra week of June** (from Mon **Jun 22**); August shows
-  September filler to complete its last week.
-- The shared **Jul/Aug boundary week is de-duplicated**: each real date appears
-  in exactly one card; the other card shows blank placeholder cells.
-- Weekends get a subtle tint; **Czech public holidays** (Jul 5 — Saints Cyril &
-  Methodius, Jul 6 — Jan Hus) get a red dot, listed in a legend below the grids.
+- All **12 months** of the selected year, full-width in a responsive grid
+  (1–3 columns), each a standard **Monday-first** month.
+- **Year switcher:** `‹ year ›` arrows in the header step the whole calendar a
+  year at a time; it opens on the current year.
+- Each month is padded with greyed **filler days** from the adjacent months —
+  including across year boundaries (January shows late December of the previous
+  year; December shows early January of the next). Filler days are inert
+  placeholders: they aren't clickable and never hold a trip, so each real date
+  has exactly one cell and every trip renders once.
+- Weekends get a subtle tint.
+
+**Public holidays**
+- Czech public holidays for the selected year are fetched from the free, keyless
+  **Nager.Date** API (`/api/v3/PublicHolidays/{year}/CZ`), cached per year and
+  reloaded when you change the year.
+- Each holiday shows a **red dot** on its day (visible even under a trip; the day's
+  tooltip has the Czech name) and is listed in a **legend** below the calendar.
+- The legend heading carries a **loader status** (dot + visible text) — amber
+  "Loading…", green "Loaded", red "Couldn't load". Holidays are informational only;
+  a failed/unknown year just shows none and the planner keeps working.
 
 **Creating & editing trips**
-- **Drag** across days to select a range (works **backwards** and **across the
-  two months**); a **single click** on a free day makes a one-day trip.
+- **Drag** across days to select a range (works **backwards** and **across month
+  boundaries**); a **single click** on a free day makes a one-day trip.
 - A dialog captures a **label** and **colour**:
-  - **Label** is a custom combobox: five place suggestions
-    (`Dekýš, Praha, Tábor, Nemšová, Grécko`) **plus free text**; filtering is
-    **accent-insensitive** ("ta" → Tábor); arrow-key navigation, Enter to pick,
+  - **Label** is a custom combobox: place suggestions shown **A–Z**
+    (`Dekýš, Grécko, Nemšová, Praha`) **plus free text**; filtering is
+    **accent-insensitive** ("gre" → Grécko); arrow-key navigation, Enter to pick,
     Escape closes the dropdown first then the dialog, chevron toggles it.
   - **Colour** is one of **9 pastel swatches** (no custom colour picker).
 - **Click a trip** (a day cell, or a travel-day half) to rename, recolour, or
@@ -86,10 +109,11 @@ npm run preview             # serve the production build locally
   boundary day is allowed**; a day may hold **at most two trips**.
 
 **Feedback & data**
-- **Live selection feedback:** free days show the `cell` (select) cursor,
-  occupied days the pointer; the in-progress drag is a blue pill with a
-  floating "Jul 13 – Jul 17 · 5 days" badge.
-- **Export / Import JSON** (validated on import); **Clear all** (confirmed).
+- **Live selection feedback:** day cells use the hand (pointer) cursor; the
+  in-progress drag is a blue pill with a floating "Jul 13 – Jul 17 · 5 days" badge.
+- **Export / Import JSON** (validated on import; exported as `holidays.json`,
+  the whole multi-year plan); **Clear all** (in-app confirm dialog — no native
+  `alert`/`confirm` popups anywhere).
 
 ---
 
@@ -103,6 +127,8 @@ ranges: [
 ```
 
 - `color` is a **Tailwind background class**, not a hex value.
+- Dates are **absolute** (full ISO), so a plan can span multiple years; the
+  calendar just shows one year at a time.
 - A **travel day is not a special record** — it's simply **two ranges that share
   one boundary date** (`A.end === B.start`). Everything about the split is
   derived.
@@ -120,26 +146,32 @@ src/
   index.css             @import "tailwindcss";
   constants.js          configuration values
   dateUtils.js          pure date/string helpers
+  importSchema.js       JSON Schema + ajv validator for imported files
+  useHolidays.js        hook: fetch CZ public holidays per year (cache + status)
   App.jsx               the stateful root component
   components/           one presentational component per file
 ```
 
-- **`constants.js`:** `YEAR`; `MONTHS` (each with `extraWeeksBefore`,
-  `hideBefore`/`hideAfter` to drive the extra June week and the de-duplicated
-  boundary week); `WEEKDAY_NAMES`; `CZ_HOLIDAYS`; `PRESET_LABELS`;
-  `PRESET_COLORS` (9 pastels) and `DEFAULT_COLOR`.
-- **`dateUtils.js` (pure):** `toISO`, `addDays`, `mondayIndex`, `formatShort`,
-  `countDays`, `rangesOverlap`, **`overlapKind`** (none / boundary / full — the
-  heart of the travel-day rule), `normalizeRange`, **`buildMonthGrid`** (builds a
-  month's weeks incl. filler/extra/blank days), and `stripDiacritics`
-  (accent-insensitive label filtering).
-- **`components/`:** `LabelCombobox`, `RangeDialog`, `HolidayLegend`,
-  `Toast`, `SelectionBadge`, `DayCell` (renders empty / single / split-travel
-  days), `MonthCard`. Each file has a default export.
-- **`App.jsx`:** owns all state (`ranges`, `selection`, `dialog`, `toast`);
-  derives `dayToRanges`, `selectionSet`, `selectionBounds`;
-  holds `validateNewRange` (create rules) and `validateImportedRanges` (import
-  rules), plus the drag state machine.
+- **`constants.js`:** `MONTH_NAMES` (the 12 month names, index + 1 = month
+  number); `WEEKDAY_NAMES`; `PRESET_LABELS`; `PRESET_COLORS` (9 pastels) and
+  `DEFAULT_COLOR`.
+- **`dateUtils.js` (pure):** `toISO`, `fromISO` (local-midnight parse),
+  `addDays`, `mondayIndex`, `formatShort`, `countDays`, **`overlapKind`** (none /
+  boundary / full — the heart of the travel-day rule), `normalizeRange`,
+  **`buildMonthGrid(year, month)`** (one month's Monday-first weeks with
+  adjacent-month filler), and `stripDiacritics` (accent-insensitive label filtering).
+- **`importSchema.js`:** `RANGES_SCHEMA` (the export/import contract) and
+  `validateRangesSchema` (ajv-compiled; maps the first error to a friendly
+  message). Used by `App.jsx`'s `validateImportedRanges` for the structural part.
+- **`components/`:** `LabelCombobox`, `RangeDialog`, `Toast`, `SelectionBadge`,
+  `DayCell` (renders filler / empty / single / split-travel days), `MonthCard`
+  (one month, takes `year` + `month`), `HolidayLegend` (the year's holidays +
+  loader status, below the calendar) and `HolidayStatus` (the status dot + text).
+  Each file has a default export.
+- **`App.jsx`:** owns all state (`ranges`, `year`, `selection`, `dialog`,
+  `toast`); renders the 12 `MonthCard`s + year switcher; derives `dayToRanges`,
+  `selectionSet`, `selectionBounds`; holds `validateNewRange` (create rules) and
+  `validateImportedRanges` (import rules), plus the drag state machine.
 - **`main.jsx`:** `createRoot(...).render(<App />)`.
 
 **Interaction model (important):** `mousedown` on **any** day anchors a
@@ -179,6 +211,17 @@ trip directly on mousedown.
   Playwright starts and stops automatically (`webServer` in
   `playwright.config.js`). Run `npm run dev` in another terminal first and it
   will be reused.
+- **The app opens on the current year, so tests pin a fixed year for
+  determinism:** `openApp` steps the `‹ year ›` switcher to `TEST_YEAR` (2026) via
+  the `setYear` helper, so date-specific assertions are stable regardless of the
+  real clock. `year-selection.spec.js` covers the switcher itself (default year,
+  arrows, grid re-render, cross-year trip persistence, all-years export/clear).
+- **Only real days carry `data-date`** (filler days are inert), so
+  `[data-date="…"]` resolves to one cell page-wide — handy for assertions.
+- **The holidays API is always stubbed** — `openApp` installs a `page.route` for
+  Nager.Date (via the `stubHolidays` helper) returning a fixed per-year fixture, so
+  the suite is deterministic and offline. `holidays.spec.js` re-stubs with options
+  to cover empty / error / loading states; never hit the live API in tests.
 - **Assert Tailwind class membership, not computed colour** — Tailwind 4 renders
   palette colours as `oklch()`, so `toHaveCSS("background-color", "rgb(...)")`
   is brittle; use `toHaveClass(/bg-blue-200/)` instead.
@@ -187,4 +230,5 @@ trip directly on mousedown.
   helper) before clicking a colour, or the click is intercepted.
 - **Imports require the current format:** colours must be Tailwind classes, so
   JSON exported before the pastel/classes refactor (hex colours) is rejected.
-- No internet is required at runtime — all dependencies are bundled by Vite.
+- Dependencies are bundled by Vite; the only runtime network call is the
+  public-holiday lookup, and the app degrades gracefully without it.

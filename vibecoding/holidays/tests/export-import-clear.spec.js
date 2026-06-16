@@ -2,7 +2,7 @@
 // dates, colors, overlaps), full-replace semantics, and Clear all.
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
-import { openApp, cell, createRange, CLS, expectEmptyCalendar } from "./helpers.js";
+import { openApp, cell, createRange, clearAll, CLS, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -21,7 +21,7 @@ test.describe("export, import and clear", () => {
     await page.getByTestId("export-btn").click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toBe("holidays-2026.json");
+    expect(download.suggestedFilename()).toBe("holidays.json");
     const data = JSON.parse(fs.readFileSync(await download.path(), "utf-8"));
 
     expect(data.ranges).toHaveLength(2);
@@ -57,8 +57,7 @@ test.describe("export, import and clear", () => {
     const exported = fs.readFileSync(await (await downloadPromise).path(), "utf-8");
 
     // Wipe everything (accept the confirm dialog)…
-    page.once("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page);
     await expectEmptyCalendar(page);
 
     // …then import the exported file: the plan must be back, identical.
@@ -122,6 +121,44 @@ test.describe("export, import and clear", () => {
     });
     await page.getByTestId("import-input").setInputFiles({
       name: "bad-date.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
+  test("importing an impossible calendar date is rejected", async ({ page }) => {
+    // Right shape (YYYY-MM-DD) but not a real day — the JSON Schema's
+    // `format: date` rejects it where a plain regex would let it through.
+    const fileContent = JSON.stringify({
+      ranges: [{ label: "Feb 30", color: "bg-red-200", start: "2026-02-30", end: "2026-03-02" }],
+    });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "feb30.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
+  test("importing a range with an unknown extra field is rejected", async ({ page }) => {
+    // The schema is strict (additionalProperties: false), so stray fields
+    // are caught rather than silently ignored.
+    const fileContent = JSON.stringify({
+      ranges: [{ label: "Sneaky", color: "bg-red-200", start: "2026-07-10", end: "2026-07-12", foo: 1 }],
+    });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "extra-field.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
+    });
+
+    await expect(page.getByTestId("toast")).toContainText("Each range needs");
+    await expectEmptyCalendar(page);
+  });
+
+  test("importing a non-object range entry is rejected", async ({ page }) => {
+    const fileContent = JSON.stringify({ ranges: [5] });
+    await page.getByTestId("import-input").setInputFiles({
+      name: "non-object.json", mimeType: "application/json", buffer: Buffer.from(fileContent),
     });
 
     await expect(page.getByTestId("toast")).toContainText("Each range needs");
@@ -192,8 +229,7 @@ test.describe("export, import and clear", () => {
     await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("A");
     await expect(cell(page, "august", "2026-08-11").getByTestId("range-label")).toHaveText("B");
 
-    page.once("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page);
 
     await expectEmptyCalendar(page);
   });
@@ -201,9 +237,19 @@ test.describe("export, import and clear", () => {
   test("declining the Clear all confirmation keeps the ranges", async ({ page }) => {
     await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-17"), "Safe");
 
-    page.once("dialog", (dialog) => dialog.dismiss()); // click "Cancel" in the confirm box
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page, { confirm: false }); // press Cancel in the confirm dialog
 
     await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Safe");
+  });
+
+  test("the Clear all confirm dialog can be dismissed with Escape", async ({ page }) => {
+    await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-17"), "Keep");
+
+    await page.getByTestId("clear-btn").click();
+    await expect(page.getByTestId("confirm-dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await expect(page.getByTestId("confirm-dialog")).not.toBeVisible();
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Keep");
   });
 });

@@ -12,18 +12,32 @@
  * Empty days start a drag (onStartDrag); occupied days/halves open
  * the matching range for editing (onEditRange).
  */
-export default function DayCell({ day, ranges, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
-  const { iso, dayNumber, inMonth, isWeekend, holiday } = day;
+export default function DayCell({ day, ranges, holiday, isSelected, isSelectionStart, isSelectionEnd, onStartDrag, onEditRange, onMouseEnter }) {
+  const { iso, dayNumber, inMonth, isWeekend } = day;
+
+  // Filler days belong to an adjacent month (incl. the previous/next
+  // year at January/December). They are non-interactive placeholders:
+  // greyed number, no `data-date`, no trip, no handlers — so every real
+  // date has exactly one interactive cell and each trip renders once.
+  if (!inMonth) {
+    return (
+      <div data-testid="filler-day" className="h-14 p-1 text-sm text-gray-300 border border-gray-100 select-none">
+        {dayNumber}
+      </div>
+    );
+  }
+
   const isTravelDay = ranges.length === 2;
 
-  // The little red holiday dot + the day number, shared by every
-  // layout below. Kept in one place so the three branches agree.
-  const holidayDot = holiday && (
+  // A red dot in the top-right marks a public holiday (shown even when a
+  // trip covers the day). `holiday` is the Czech name, or undefined.
+  const holidayDot = holiday ? (
     <span
       data-testid="holiday-marker"
+      title={holiday}
       className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500"
     />
-  );
+  ) : null;
 
   // Travel day: two stacked, independently-clickable halves.
   if (isTravelDay) {
@@ -87,22 +101,20 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
   } else if (isSelected) {
     // Live preview while dragging — a strong blue that forms one
     // continuous pill (rounded only at the selection's two ends).
-    classes.push("cursor-cell bg-blue-300 ring-2 ring-inset ring-blue-500 text-blue-900");
+    classes.push("cursor-pointer bg-blue-300 ring-2 ring-inset ring-blue-500 text-blue-900");
     if (isSelectionStart) classes.push("rounded-l-lg");
     if (isSelectionEnd) classes.push("rounded-r-lg");
   } else if (isWeekend) {
-    classes.push("cursor-cell bg-gray-50 hover:bg-blue-50");
+    classes.push("cursor-pointer bg-gray-50 hover:bg-blue-50");
   } else {
-    classes.push("cursor-cell bg-white hover:bg-blue-50");
+    classes.push("cursor-pointer bg-white hover:bg-blue-50");
   }
-
-  if (!inMonth && !range) classes.push("text-gray-400"); // dim filler days
 
   return (
     <div
       data-date={iso}
       className={classes.join(" ")}
-      title={range ? range.label : ""}
+      title={[range && range.label, holiday].filter(Boolean).join(" - ")}
       onMouseDown={(e) => {
         e.preventDefault(); // stop the browser from text-selecting while we drag
         // Begin a selection anchored here — on a free day OR on an
@@ -114,9 +126,7 @@ export default function DayCell({ day, ranges, isSelected, isSelectionStart, isS
       }}
       onMouseEnter={() => onMouseEnter(iso)}
     >
-      <span className={holiday && !range ? "font-bold text-red-600" : ""}>
-        {dayNumber}
-      </span>
+      <span>{dayNumber}</span>
       {holidayDot}
       {range && (
         <div data-testid="range-label" className="text-xs font-semibold truncate">
