@@ -21,7 +21,7 @@ npm run build               # production build into dist/
 npm run preview             # serve the production build locally
 ```
 
-- **Tests** (Playwright, 94 e2e tests). Playwright starts the Vite dev server
+- **Tests** (Playwright, 96 e2e tests). Playwright starts the Vite dev server
   itself, so no separate step is needed:
   ```bash
   npx playwright install chromium   # once
@@ -163,13 +163,14 @@ src/
 - **`importSchema.js`:** `RANGES_SCHEMA` (the export/import contract) and
   `validateRangesSchema` (ajv-compiled; maps the first error to a friendly
   message). Used by `App.jsx`'s `validateImportedRanges` for the structural part.
-- **`components/`:** `LabelCombobox`, `RangeDialog`, `Toast`, `SelectionBadge`,
+- **`components/`:** `LabelCombobox`, `RangeDialog` (create/edit a trip),
+  `ConfirmDialog` (the Clear-all confirmation modal), `Toast`, `SelectionBadge`,
   `DayCell` (renders filler / empty / single / split-travel days), `MonthCard`
   (one month, takes `year` + `month`), `HolidayLegend` (the year's holidays +
   loader status, below the calendar) and `HolidayStatus` (the status dot + text).
   Each file has a default export.
 - **`App.jsx`:** owns all state (`ranges`, `year`, `selection`, `dialog`,
-  `toast`); renders the 12 `MonthCard`s + year switcher; derives `dayToRanges`,
+  `confirm`, `toast`); renders the 12 `MonthCard`s + year switcher; derives `dayToRanges`,
   `selectionSet`, `selectionBounds`; holds `validateNewRange` (create rules) and
   `validateImportedRanges` (import rules), plus the drag state machine.
 - **`main.jsx`:** `createRoot(...).render(<App />)`.
