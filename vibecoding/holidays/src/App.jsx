@@ -347,7 +347,7 @@ export default function App() {
   const importInputRef = useRef(null);
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="p-6">
       {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
