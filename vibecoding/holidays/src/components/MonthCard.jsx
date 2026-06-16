@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { YEAR, WEEKDAY_NAMES } from "../constants.js";
+import { WEEKDAY_NAMES } from "../constants.js";
 import { buildMonthGrid } from "../dateUtils.js";
 import DayCell from "./DayCell.jsx";
 
@@ -8,20 +8,20 @@ import DayCell from "./DayCell.jsx";
  * The grid itself is just CSS Grid with 7 columns — each week from
  * `buildMonthGrid` flows naturally into one row.
  */
-export default function MonthCard({ name, month, gridOptions, dayToRanges, selectionSet, selectionBounds, onStartDrag, onEditRange, onDayMouseEnter }) {
-  // useMemo caches the computed grid: the calendar for July 2026
-  // never changes, so there is no reason to rebuild it on every render.
+export default function MonthCard({ name, year, month, dayToRanges, selectionSet, selectionBounds, onStartDrag, onEditRange, onDayMouseEnter }) {
+  // useMemo caches the computed grid: a given month/year never changes,
+  // so there is no reason to rebuild it on every render.
   const weeks = useMemo(
-    () => buildMonthGrid(YEAR, month, gridOptions),
-    [month, gridOptions]
+    () => buildMonthGrid(year, month),
+    [year, month]
   );
 
   return (
     <section
       data-testid={`month-${name.toLowerCase()}`}
-      className="bg-white rounded-xl shadow p-4 flex-1 min-w-[320px]"
+      className="bg-white rounded-xl shadow p-4"
     >
-      <h2 className="text-lg font-bold text-center mb-3">{name} {YEAR}</h2>
+      <h2 className="text-lg font-bold text-center mb-3">{name}</h2>
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
@@ -35,13 +35,10 @@ export default function MonthCard({ name, month, gridOptions, dayToRanges, selec
 
       {/* Day cells: `weeks.flat()` turns [[7 days], [7 days], …]
           into one flat list that fills the 7-column grid row by row.
-          Hidden days (the Jul/Aug boundary dates owned by the OTHER
-          card) render as empty placeholders that keep their column. */}
+          Filler days from adjacent months are rendered (greyed) by
+          DayCell itself. */}
       <div className="grid grid-cols-7">
         {weeks.flat().map((day) => {
-          if (day.hidden) {
-            return <div key={day.iso} data-testid="blank-day" className="h-14" />;
-          }
           const dayRanges = dayToRanges.get(day.iso) || [];
           return (
             <DayCell

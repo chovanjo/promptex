@@ -61,12 +61,12 @@ test.describe("creating ranges", () => {
     await expect(cell(page, "july", "2026-07-30").getByTestId("range-label")).toHaveText("Cross month");
   });
 
-  test("a range can be planned on the extra June week", async ({ page }) => {
-    await createRange(page, cell(page, "july", "2026-06-22"), cell(page, "july", "2026-06-26"),
+  test("a range can be planned in any month (e.g. June)", async ({ page }) => {
+    await createRange(page, cell(page, "june", "2026-06-22"), cell(page, "june", "2026-06-26"),
       "Late June", "green");
 
-    await expect(cell(page, "july", "2026-06-24")).toHaveClass(new RegExp(CLS.green));
-    await expect(cell(page, "july", "2026-06-22").getByTestId("range-label")).toHaveText("Late June");
+    await expect(cell(page, "june", "2026-06-24")).toHaveClass(new RegExp(CLS.green));
+    await expect(cell(page, "june", "2026-06-22").getByTestId("range-label")).toHaveText("Late June");
   });
 
   test("an empty label falls back to a default name", async ({ page }) => {

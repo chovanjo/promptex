@@ -4,23 +4,41 @@
 // Playwright never runs it directly.
 import { expect } from "@playwright/test";
 
+/** The year the suite pins the calendar to (see openApp). Fixed so
+    date-based tests stay deterministic no matter the real clock. */
+export const TEST_YEAR = 2026;
+
 /**
- * Open the app and wait until React has actually rendered.
- * Vite serves the compiled modules from the dev server (started
- * automatically by Playwright — see `webServer` in the config); the
- * base URL is set there, so we navigate to "/". There is still a
- * short moment where the page is loaded but React has not mounted yet.
+ * Open the app, wait for React to render, and pin the calendar to
+ * TEST_YEAR. Vite serves the compiled modules from the dev server
+ * (started automatically by Playwright — see `webServer` in the config);
+ * the base URL is set there, so we navigate to "/". The app defaults to
+ * the *current* year, so we step it to TEST_YEAR for deterministic dates.
  */
 export async function openApp(page) {
   await page.goto("/");
-  await expect(page.getByTestId("month-july")).toBeVisible();
+  await expect(page.getByTestId("month-january")).toBeVisible();
+  await setYear(page, TEST_YEAR);
 }
 
 /**
- * Locator for one day cell, scoped to a month grid.
- * Scoping matters: dates near month boundaries exist in BOTH grids
- * (e.g. Jul 30 is a real day in July and a filler day in August), so a
- * bare [data-date=…] selector would match two elements.
+ * Step the year switcher until `year-display` shows `target`.
+ * Clicks `year-next` / `year-prev` as needed.
+ */
+export async function setYear(page, target) {
+  const display = page.getByTestId("year-display");
+  for (let guard = 0; guard < 60; guard++) {
+    const current = parseInt((await display.textContent()).trim(), 10);
+    if (current === target) return;
+    await page.getByTestId(current < target ? "year-next" : "year-prev").click();
+  }
+  throw new Error(`Could not reach year ${target}`);
+}
+
+/**
+ * Locator for one real day cell, scoped to a month grid. Only in-month
+ * days carry `data-date` (filler days are inert placeholders), so a date
+ * resolves to exactly one cell; the month scope just keeps intent clear.
  */
 export function cell(page, month, iso) {
   return page.getByTestId(`month-${month}`).locator(`[data-date="${iso}"]`);

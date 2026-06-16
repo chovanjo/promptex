@@ -197,19 +197,6 @@ test.describe("travel days", () => {
     await expect(cell(page, "july", "2026-07-30").getByTestId("travel-leaving")).toHaveCount(0);
   });
 
-  test("a travel day on a public holiday still shows the holiday marker", async ({ page }) => {
-    // Jul 5 is a Czech public holiday. Make it the shared travel day: one
-    // trip ends on Jul 5, the next begins on Jul 5. The holiday dot must
-    // still render on the split cell (a separate DayCell code path).
-    await createRange(page, cell(page, "july", "2026-07-04"), cell(page, "july", "2026-07-05"),
-      "Dekýš", "blue");
-    await createRange(page, cell(page, "july", "2026-07-06"), cell(page, "july", "2026-07-05"),
-      "Praha", "green");
-
-    const jul5 = travelCell(page, "2026-07-05");
-    await expect(jul5.cell).toHaveAttribute("data-testid", "travel-day");
-    await expect(jul5.cell.getByTestId("holiday-marker")).toBeVisible();
-  });
 
   test("deleting the middle trip of a chain un-splits both shared days", async ({ page }) => {
     // A chain: Dekýš Jul 1–3, Praha Jul 3–5, Tábor Jul 5–7 — so Jul 3 and

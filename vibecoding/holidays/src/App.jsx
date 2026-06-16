@@ -2,12 +2,11 @@
 // `React` object; with Vite we import them directly from the package.
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
-import { YEAR, MONTHS, DEFAULT_COLOR } from "./constants.js";
+import { MONTH_NAMES, DEFAULT_COLOR } from "./constants.js";
 import { toISO, addDays, normalizeRange, overlapKind, formatShort } from "./dateUtils.js";
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
-import HolidayLegend from "./components/HolidayLegend.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
 
@@ -19,10 +18,12 @@ import SelectionBadge from "./components/SelectionBadge.jsx";
 export default function App() {
   // State:
   //   ranges:    the saved holiday ranges (the app's core data)
+  //   year:      which year the calendar shows (defaults to this year)
   //   selection: { anchor, hover } while a drag is in progress, else null
   //   dialog:    config of the open dialog, else null
   //   toast:     { message, type } for the notification, else null
   const [ranges, setRanges] = useState([]);
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [toast, setToast] = useState(null);
@@ -257,7 +258,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `holidays-${YEAR}.json`;
+    link.download = "holidays.json"; // the whole plan (all years)
     link.click();
     URL.revokeObjectURL(url); // release the memory the Blob URL holds
   }
@@ -352,15 +353,31 @@ export default function App() {
   const importInputRef = useRef(null);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      {/* Header with title and toolbar */}
+    <div className="max-w-7xl mx-auto p-6">
+      {/* Header with title, year switcher, and toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Holiday Planner {YEAR}</h1>
+          <h1 className="text-2xl font-bold">Holiday Planner {year}</h1>
           <p className="text-sm text-gray-500">
             Drag across days to create a range · click a range to edit it · drag onto a trip's edge for a travel day
           </p>
         </div>
+
+        {/* Year switcher: step the whole 12-month calendar a year at a time. */}
+        <div className="flex items-center gap-1">
+          <button type="button" data-testid="year-prev" aria-label="Previous year"
+            onClick={() => setYear((y) => y - 1)}
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 text-lg leading-none">
+            ‹
+          </button>
+          <span data-testid="year-display" className="text-xl font-bold tabular-nums w-16 text-center">{year}</span>
+          <button type="button" data-testid="year-next" aria-label="Next year"
+            onClick={() => setYear((y) => y + 1)}
+            className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg w-9 h-9 text-lg leading-none">
+            ›
+          </button>
+        </div>
+
         <div className="flex gap-2">
           <button type="button" data-testid="export-btn" onClick={handleExport}
             className="bg-white border border-gray-300 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm font-medium">
@@ -379,14 +396,14 @@ export default function App() {
         </div>
       </header>
 
-      {/* The two month calendars */}
-      <div className="flex flex-wrap gap-6 mb-6">
-        {MONTHS.map((monthConfig) => (
+      {/* The full year: one card per month, like a wall calendar. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+        {MONTH_NAMES.map((name, i) => (
           <MonthCard
-            key={monthConfig.month}
-            name={monthConfig.name}
-            month={monthConfig.month}
-            gridOptions={monthConfig}
+            key={name}
+            name={name}
+            year={year}
+            month={i + 1}
             dayToRanges={dayToRanges}
             selectionSet={selectionSet}
             selectionBounds={selectionBounds}
@@ -396,9 +413,6 @@ export default function App() {
           />
         ))}
       </div>
-
-      {/* Holiday legend */}
-      <HolidayLegend />
 
       {/* Overlays (rendered only when needed) */}
       {dialog && (
