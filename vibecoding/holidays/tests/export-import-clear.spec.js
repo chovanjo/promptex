@@ -2,7 +2,7 @@
 // dates, colors, overlaps), full-replace semantics, and Clear all.
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
-import { openApp, cell, createRange, CLS, expectEmptyCalendar } from "./helpers.js";
+import { openApp, cell, createRange, clearAll, CLS, expectEmptyCalendar } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -57,8 +57,7 @@ test.describe("export, import and clear", () => {
     const exported = fs.readFileSync(await (await downloadPromise).path(), "utf-8");
 
     // Wipe everything (accept the confirm dialog)…
-    page.once("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page);
     await expectEmptyCalendar(page);
 
     // …then import the exported file: the plan must be back, identical.
@@ -230,8 +229,7 @@ test.describe("export, import and clear", () => {
     await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("A");
     await expect(cell(page, "august", "2026-08-11").getByTestId("range-label")).toHaveText("B");
 
-    page.once("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page);
 
     await expectEmptyCalendar(page);
   });
@@ -239,9 +237,19 @@ test.describe("export, import and clear", () => {
   test("declining the Clear all confirmation keeps the ranges", async ({ page }) => {
     await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-17"), "Safe");
 
-    page.once("dialog", (dialog) => dialog.dismiss()); // click "Cancel" in the confirm box
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page, { confirm: false }); // press Cancel in the confirm dialog
 
     await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Safe");
+  });
+
+  test("the Clear all confirm dialog can be dismissed with Escape", async ({ page }) => {
+    await createRange(page, cell(page, "july", "2026-07-13"), cell(page, "july", "2026-07-17"), "Keep");
+
+    await page.getByTestId("clear-btn").click();
+    await expect(page.getByTestId("confirm-dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await expect(page.getByTestId("confirm-dialog")).not.toBeVisible();
+    await expect(cell(page, "july", "2026-07-15").getByTestId("range-label")).toHaveText("Keep");
   });
 });

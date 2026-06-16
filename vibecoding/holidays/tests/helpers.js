@@ -115,6 +115,17 @@ export async function createRange(page, fromCell, toCell, label, presetName = "b
   await expect(page.getByTestId("range-dialog")).not.toBeVisible();
 }
 
+/**
+ * Click "Clear all" and resolve its in-app confirm dialog: accept by
+ * default, or pass { confirm: false } to dismiss it (keeping the plan).
+ */
+export async function clearAll(page, { confirm = true } = {}) {
+  await page.getByTestId("clear-btn").click();
+  await expect(page.getByTestId("confirm-dialog")).toBeVisible();
+  await page.getByTestId(confirm ? "confirm-accept" : "confirm-cancel").click();
+  await expect(page.getByTestId("confirm-dialog")).not.toBeVisible();
+}
+
 /** The app stores colors as Tailwind background classes (see
     PRESET_COLORS in src/constants.js), so tests assert class membership.
     (Asserting the computed CSS value would be brittle: Tailwind 4

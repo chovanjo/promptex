@@ -9,6 +9,7 @@ import { useHolidays } from "./useHolidays.js";
 
 import MonthCard from "./components/MonthCard.jsx";
 import RangeDialog from "./components/RangeDialog.jsx";
+import ConfirmDialog from "./components/ConfirmDialog.jsx";
 import Toast from "./components/Toast.jsx";
 import SelectionBadge from "./components/SelectionBadge.jsx";
 import HolidayLegend from "./components/HolidayLegend.jsx";
@@ -29,6 +30,7 @@ export default function App() {
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [selection, setSelection] = useState(null);
   const [dialog, setDialog] = useState(null);
+  const [confirm, setConfirm] = useState(null); // { message, confirmLabel, onConfirm } | null
   const [toast, setToast] = useState(null);
 
   // Czech public holidays for the selected year (fetched + cached, with a
@@ -339,12 +341,16 @@ export default function App() {
   }
 
   function handleClearAll() {
-    // window.confirm is a simple built-in guard for destructive
-    // actions — fine for a small app like this one.
-    if (window.confirm("Remove all ranges?")) {
-      setRanges([]);
-      showToast("All ranges cleared.");
-    }
+    // Confirm via an in-app dialog (no native window.confirm); the actual
+    // clear happens in onConfirm.
+    setConfirm({
+      message: "Remove all ranges?",
+      confirmLabel: "Clear all",
+      onConfirm: () => {
+        setRanges([]);
+        showToast("All ranges cleared.");
+      },
+    });
   }
 
   // Render. A hidden <input type="file"> does the real file picking; the
@@ -444,6 +450,14 @@ export default function App() {
           onSave={handleDialogSave}
           onDelete={handleDialogDelete}
           onCancel={closeDialog}
+        />
+      )}
+      {confirm && (
+        <ConfirmDialog
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          onConfirm={() => { confirm.onConfirm(); setConfirm(null); }}
+          onCancel={() => setConfirm(null)}
         />
       )}
       <Toast toast={toast} />

@@ -3,7 +3,7 @@
 // Import / Clear act on the whole plan, not just the year on screen).
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
-import { openApp, setYear, cell, createRange, expectEmptyCalendar } from "./helpers.js";
+import { openApp, setYear, cell, createRange, clearAll, expectEmptyCalendar } from "./helpers.js";
 
 test.describe("year selection", () => {
   test("defaults to the current year on load", async ({ page }) => {
@@ -92,8 +92,7 @@ test.describe("year selection", () => {
       "Gone", "blue");
 
     await setYear(page, 2027);
-    page.once("dialog", (d) => d.accept());
-    await page.getByTestId("clear-btn").click();
+    await clearAll(page);
 
     await setYear(page, 2026);
     await expectEmptyCalendar(page);
