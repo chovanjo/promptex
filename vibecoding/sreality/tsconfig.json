@@ -1,0 +1,18 @@
+{
+  // TypeScript settings for the test suite. `npm run typecheck` uses this to check our types
+  // without producing any output files (noEmit). Comments are allowed in tsconfig files.
+  "compilerOptions": {
+    "target": "ES2022", // the JavaScript version features compile down to
+    "module": "ESNext", // we use modern `import`/`export` syntax
+    "moduleResolution": "Bundler", // how imports are looked up (matches Playwright's loader)
+    "lib": ["ES2022"], // built-in APIs we can use
+    "types": ["node"], // include Node.js types (for `process`, `node:fs`, etc.)
+    "strict": true, // catch as many mistakes as possible
+    "esModuleInterop": true, // smoother importing of CommonJS packages
+    "resolveJsonModule": true, // allow importing .json files
+    "skipLibCheck": true, // don't type-check inside third-party packages (faster)
+    "noEmit": true // type-check only; never write compiled files
+  },
+  // Which files to type-check.
+  "include": ["tests", "playwright.config.ts"]
+}

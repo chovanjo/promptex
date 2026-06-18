@@ -1,0 +1,3007 @@
+{
+  "$comment": "sreality.cz property-search filters -> API parameters. Generated and verified live against https://www.sreality.cz/api/v1 on 2026-06-17.",
+  "api": {
+    "base_url": "https://www.sreality.cz/api/v1",
+    "search": {
+      "method": "GET",
+      "path": "/estates/search",
+      "note": "Pass any combination of the filter api_params below as query-string. Returns {pagination:{total,limit,offset}, results:[...]}."
+    },
+    "codebooks": {
+      "method": "GET",
+      "path": "/estates/filter_page",
+      "params": [
+        "category_main_cb",
+        "category_type_cb"
+      ],
+      "note": "Returns available filters + enum value lists (id/name) for the given category & type. Source of truth for all enums below."
+    },
+    "histogram": {
+      "method": "GET",
+      "path": "/estates/filter_page/histogram",
+      "note": "Price histogram buckets for current filter set."
+    },
+    "clusters": {
+      "method": "GET",
+      "path": "/estates/search/clusters",
+      "required": [
+        "lat_min",
+        "lat_max",
+        "lon_min",
+        "lon_max"
+      ],
+      "optional": [
+        "zoom"
+      ],
+      "note": "Map clustering for a bounding box."
+    },
+    "locality_suggest": {
+      "method": "GET",
+      "path": "/localities/suggest",
+      "params": [
+        "phrase"
+      ],
+      "note": "Autocomplete; each result.userData has entityType + id used for locality_entity_type / locality_entity_id."
+    },
+    "locality_geometries": {
+      "method": "GET",
+      "path": "/localities/geometries",
+      "note": "Polygon geometries for localities."
+    },
+    "paging": {
+      "per_page": "results per page (default 100)",
+      "page": "1-based page index"
+    },
+    "auth": "None for the endpoints above. (Note: /api/v1/estates without /search is a separate authenticated endpoint and returns 401.)"
+  },
+  "filters": {
+    "category_main_cb": {
+      "api_param": "category_main_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Byty",
+          "label_en": "Apartments"
+        },
+        {
+          "code": 2,
+          "label_cs": "Domy",
+          "label_en": "Houses"
+        },
+        {
+          "code": 3,
+          "label_cs": "Pozemky",
+          "label_en": "Land"
+        },
+        {
+          "code": 4,
+          "label_cs": "Komerční",
+          "label_en": "Commercial"
+        },
+        {
+          "code": 5,
+          "label_cs": "Ostatní",
+          "label_en": "Other"
+        }
+      ],
+      "label_en": "Property category",
+      "example": 1
+    },
+    "category_type_cb": {
+      "api_param": "category_type_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Prodej",
+          "label_en": "Sale"
+        },
+        {
+          "code": 2,
+          "label_cs": "Pronájem",
+          "label_en": "Rent"
+        },
+        {
+          "code": 3,
+          "label_cs": "Dražby",
+          "label_en": "Auction"
+        },
+        {
+          "code": 4,
+          "label_cs": "Podíly",
+          "label_en": "Co-ownership share"
+        }
+      ],
+      "label_en": "Transaction type",
+      "example": 1
+    },
+    "category_sub_cb": {
+      "api_param": "category_sub_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Sub-category / disposition",
+      "values_by_category": {
+        "byty": [
+          {
+            "code": 2,
+            "label_cs": "1+kk",
+            "label_en": "1+kk"
+          },
+          {
+            "code": 3,
+            "label_cs": "1+1",
+            "label_en": "1+1"
+          },
+          {
+            "code": 4,
+            "label_cs": "2+kk",
+            "label_en": "2+kk"
+          },
+          {
+            "code": 5,
+            "label_cs": "2+1",
+            "label_en": "2+1"
+          },
+          {
+            "code": 6,
+            "label_cs": "3+kk",
+            "label_en": "3+kk"
+          },
+          {
+            "code": 7,
+            "label_cs": "3+1",
+            "label_en": "3+1"
+          },
+          {
+            "code": 8,
+            "label_cs": "4+kk",
+            "label_en": "4+kk"
+          },
+          {
+            "code": 9,
+            "label_cs": "4+1",
+            "label_en": "4+1"
+          },
+          {
+            "code": 10,
+            "label_cs": "5+kk",
+            "label_en": "5+kk"
+          },
+          {
+            "code": 11,
+            "label_cs": "5+1",
+            "label_en": "5+1"
+          },
+          {
+            "code": 12,
+            "label_cs": "6 a více",
+            "label_en": "6 and more"
+          },
+          {
+            "code": 16,
+            "label_cs": "Atypický",
+            "label_en": "Atypical"
+          }
+        ],
+        "domy": [
+          {
+            "code": 33,
+            "label_cs": "Chata",
+            "label_en": "Cottage (chata)"
+          },
+          {
+            "code": 35,
+            "label_cs": "Památka/jiné",
+            "label_en": "Heritage/other"
+          },
+          {
+            "code": 37,
+            "label_cs": "Rodinný",
+            "label_en": "Family house"
+          },
+          {
+            "code": 39,
+            "label_cs": "Vila",
+            "label_en": "Villa"
+          },
+          {
+            "code": 40,
+            "label_cs": "Na klíč",
+            "label_en": "Turnkey"
+          },
+          {
+            "code": 43,
+            "label_cs": "Chalupa",
+            "label_en": "Cottage (chalupa)"
+          },
+          {
+            "code": 44,
+            "label_cs": "Zemědělská usedlost",
+            "label_en": "Farmstead"
+          },
+          {
+            "code": 54,
+            "label_cs": "Vícegenerační dům",
+            "label_en": "Multi-generation house"
+          }
+        ],
+        "pozemky": [
+          {
+            "code": 18,
+            "label_cs": "Komerční",
+            "label_en": "Commercial land"
+          },
+          {
+            "code": 19,
+            "label_cs": "Bydlení",
+            "label_en": "Residential land"
+          },
+          {
+            "code": 20,
+            "label_cs": "Pole",
+            "label_en": "Field"
+          },
+          {
+            "code": 21,
+            "label_cs": "Lesy",
+            "label_en": "Forest"
+          },
+          {
+            "code": 22,
+            "label_cs": "Louky",
+            "label_en": "Meadow"
+          },
+          {
+            "code": 23,
+            "label_cs": "Zahrady",
+            "label_en": "Garden"
+          },
+          {
+            "code": 24,
+            "label_cs": "Ostatní",
+            "label_en": "Other"
+          },
+          {
+            "code": 46,
+            "label_cs": "Rybníky",
+            "label_en": "Pond"
+          },
+          {
+            "code": 48,
+            "label_cs": "Sady/vinice",
+            "label_en": "Orchard/vineyard"
+          }
+        ],
+        "komercni": [
+          {
+            "code": 25,
+            "label_cs": "Kanceláře",
+            "label_en": "Offices"
+          },
+          {
+            "code": 26,
+            "label_cs": "Sklady",
+            "label_en": "Warehouses"
+          },
+          {
+            "code": 27,
+            "label_cs": "Výroba",
+            "label_en": "Production"
+          },
+          {
+            "code": 28,
+            "label_cs": "Obchodní prostory",
+            "label_en": "Retail premises"
+          },
+          {
+            "code": 29,
+            "label_cs": "Ubytování",
+            "label_en": "Accommodation"
+          },
+          {
+            "code": 30,
+            "label_cs": "Restaurace",
+            "label_en": "Restaurant"
+          },
+          {
+            "code": 31,
+            "label_cs": "Zemědělský",
+            "label_en": "Agricultural"
+          },
+          {
+            "code": 32,
+            "label_cs": "Ostatní",
+            "label_en": "Other"
+          },
+          {
+            "code": 38,
+            "label_cs": "Činžovní dům",
+            "label_en": "Apartment building"
+          },
+          {
+            "code": 56,
+            "label_cs": "Ordinace",
+            "label_en": "Surgery/clinic"
+          },
+          {
+            "code": 57,
+            "label_cs": "Apartmány",
+            "label_en": "Apartments"
+          }
+        ],
+        "ostatni": [
+          {
+            "code": 34,
+            "label_cs": "Garáž",
+            "label_en": "Garage"
+          },
+          {
+            "code": 36,
+            "label_cs": "Ostatní",
+            "label_en": "Other"
+          },
+          {
+            "code": 50,
+            "label_cs": "Vinný sklep",
+            "label_en": "Wine cellar"
+          },
+          {
+            "code": 51,
+            "label_cs": "Půdní prostor",
+            "label_en": "Attic space"
+          },
+          {
+            "code": 52,
+            "label_cs": "Garážové stání",
+            "label_en": "Parking space"
+          },
+          {
+            "code": 53,
+            "label_cs": "Mobilheim",
+            "label_en": "Mobile home"
+          }
+        ]
+      },
+      "example": 4
+    },
+    "building_condition": {
+      "api_param": "building_condition",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Velmi dobrý",
+          "label_en": "Very good"
+        },
+        {
+          "code": 2,
+          "label_cs": "Dobrý",
+          "label_en": "Good"
+        },
+        {
+          "code": 3,
+          "label_cs": "Špatný",
+          "label_en": "Poor"
+        },
+        {
+          "code": 4,
+          "label_cs": "Ve výstavbě",
+          "label_en": "Under construction"
+        },
+        {
+          "code": 5,
+          "label_cs": "Projekt",
+          "label_en": "Project"
+        },
+        {
+          "code": 6,
+          "label_cs": "Novostavba",
+          "label_en": "New building"
+        },
+        {
+          "code": 7,
+          "label_cs": "K demolici",
+          "label_en": "For demolition"
+        },
+        {
+          "code": 8,
+          "label_cs": "Před rekonstrukcí",
+          "label_en": "Before reconstruction"
+        },
+        {
+          "code": 9,
+          "label_cs": "Po rekonstrukci",
+          "label_en": "After reconstruction"
+        },
+        {
+          "code": 10,
+          "label_cs": "V rekonstrukci",
+          "label_en": "Under reconstruction"
+        }
+      ],
+      "label_en": "Building condition"
+    },
+    "locality_country_id": {
+      "api_param": "locality_country_id",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 4,
+          "label_cs": "Afghánistán"
+        },
+        {
+          "code": 248,
+          "label_cs": "Ålandy"
+        },
+        {
+          "code": 8,
+          "label_cs": "Albánie"
+        },
+        {
+          "code": 12,
+          "label_cs": "Alžírsko"
+        },
+        {
+          "code": 16,
+          "label_cs": "Americká Samoa"
+        },
+        {
+          "code": 850,
+          "label_cs": "Americké Panenské ostrovy"
+        },
+        {
+          "code": 20,
+          "label_cs": "Andorra"
+        },
+        {
+          "code": 24,
+          "label_cs": "Angola"
+        },
+        {
+          "code": 660,
+          "label_cs": "Anguilla"
+        },
+        {
+          "code": 10,
+          "label_cs": "Antarktida"
+        },
+        {
+          "code": 28,
+          "label_cs": "Antigua a Barbuda"
+        },
+        {
+          "code": 32,
+          "label_cs": "Argentina"
+        },
+        {
+          "code": 51,
+          "label_cs": "Arménie"
+        },
+        {
+          "code": 533,
+          "label_cs": "Aruba"
+        },
+        {
+          "code": 36,
+          "label_cs": "Austrálie"
+        },
+        {
+          "code": 31,
+          "label_cs": "Ázerbájdžán"
+        },
+        {
+          "code": 44,
+          "label_cs": "Bahamy"
+        },
+        {
+          "code": 48,
+          "label_cs": "Bahrajn"
+        },
+        {
+          "code": 50,
+          "label_cs": "Bangladéš"
+        },
+        {
+          "code": 52,
+          "label_cs": "Barbados"
+        },
+        {
+          "code": 56,
+          "label_cs": "Belgie"
+        },
+        {
+          "code": 84,
+          "label_cs": "Belize"
+        },
+        {
+          "code": 204,
+          "label_cs": "Benin"
+        },
+        {
+          "code": 60,
+          "label_cs": "Bermudy"
+        },
+        {
+          "code": 64,
+          "label_cs": "Bhútán"
+        },
+        {
+          "code": 68,
+          "label_cs": "Bolívie"
+        },
+        {
+          "code": 535,
+          "label_cs": "Bonaire, Svatý Eustach a Saba"
+        },
+        {
+          "code": 70,
+          "label_cs": "Bosna a Hercegovina"
+        },
+        {
+          "code": 72,
+          "label_cs": "Botswana"
+        },
+        {
+          "code": 74,
+          "label_cs": "Bouvetův ostrov"
+        },
+        {
+          "code": 76,
+          "label_cs": "Brazílie"
+        },
+        {
+          "code": 86,
+          "label_cs": "Britské indickooceánské území"
+        },
+        {
+          "code": 92,
+          "label_cs": "Britské Panenské ostrovy"
+        },
+        {
+          "code": 96,
+          "label_cs": "Brunej"
+        },
+        {
+          "code": 100,
+          "label_cs": "Bulharsko"
+        },
+        {
+          "code": 854,
+          "label_cs": "Burkina Faso"
+        },
+        {
+          "code": 108,
+          "label_cs": "Burundi"
+        },
+        {
+          "code": 184,
+          "label_cs": "Cookovy ostrovy"
+        },
+        {
+          "code": 531,
+          "label_cs": "Curaçao"
+        },
+        {
+          "code": 148,
+          "label_cs": "Čad"
+        },
+        {
+          "code": 499,
+          "label_cs": "Černá Hora"
+        },
+        {
+          "code": 112,
+          "label_cs": "Česká republika"
+        },
+        {
+          "code": 156,
+          "label_cs": "Čína"
+        },
+        {
+          "code": 208,
+          "label_cs": "Dánsko"
+        },
+        {
+          "code": 180,
+          "label_cs": "Demokratická republika Kongo"
+        },
+        {
+          "code": 212,
+          "label_cs": "Dominika"
+        },
+        {
+          "code": 214,
+          "label_cs": "Dominikánská republika"
+        },
+        {
+          "code": 262,
+          "label_cs": "Džibutsko"
+        },
+        {
+          "code": 818,
+          "label_cs": "Egypt"
+        },
+        {
+          "code": 218,
+          "label_cs": "Ekvádor"
+        },
+        {
+          "code": 232,
+          "label_cs": "Eritrea"
+        },
+        {
+          "code": 233,
+          "label_cs": "Estonsko"
+        },
+        {
+          "code": 231,
+          "label_cs": "Etiopie"
+        },
+        {
+          "code": 234,
+          "label_cs": "Faerské ostrovy"
+        },
+        {
+          "code": 238,
+          "label_cs": "Falklandy (Malvíny)"
+        },
+        {
+          "code": 242,
+          "label_cs": "Fidži"
+        },
+        {
+          "code": 608,
+          "label_cs": "Filipíny"
+        },
+        {
+          "code": 246,
+          "label_cs": "Finsko"
+        },
+        {
+          "code": 250,
+          "label_cs": "Francie"
+        },
+        {
+          "code": 254,
+          "label_cs": "Francouzská Guyana"
+        },
+        {
+          "code": 260,
+          "label_cs": "Francouzská jižní a antarktická území"
+        },
+        {
+          "code": 258,
+          "label_cs": "Francouzská Polynésie"
+        },
+        {
+          "code": 266,
+          "label_cs": "Gabon"
+        },
+        {
+          "code": 270,
+          "label_cs": "Gambie"
+        },
+        {
+          "code": 288,
+          "label_cs": "Ghana"
+        },
+        {
+          "code": 292,
+          "label_cs": "Gibraltar"
+        },
+        {
+          "code": 308,
+          "label_cs": "Grenada"
+        },
+        {
+          "code": 304,
+          "label_cs": "Grónsko"
+        },
+        {
+          "code": 268,
+          "label_cs": "Gruzie"
+        },
+        {
+          "code": 312,
+          "label_cs": "Guadeloupe"
+        },
+        {
+          "code": 316,
+          "label_cs": "Guam"
+        },
+        {
+          "code": 320,
+          "label_cs": "Guatemala"
+        },
+        {
+          "code": 831,
+          "label_cs": "Guernsey"
+        },
+        {
+          "code": 324,
+          "label_cs": "Guinea"
+        },
+        {
+          "code": 624,
+          "label_cs": "Guinea-Bissau"
+        },
+        {
+          "code": 328,
+          "label_cs": "Guyana"
+        },
+        {
+          "code": 332,
+          "label_cs": "Haiti"
+        },
+        {
+          "code": 334,
+          "label_cs": "Heardův ostrov a McDonaldovy ostrovy"
+        },
+        {
+          "code": 340,
+          "label_cs": "Honduras"
+        },
+        {
+          "code": 344,
+          "label_cs": "Hongkong"
+        },
+        {
+          "code": 152,
+          "label_cs": "Chile"
+        },
+        {
+          "code": 191,
+          "label_cs": "Chorvatsko"
+        },
+        {
+          "code": 356,
+          "label_cs": "Indie"
+        },
+        {
+          "code": 360,
+          "label_cs": "Indonésie"
+        },
+        {
+          "code": 368,
+          "label_cs": "Irák"
+        },
+        {
+          "code": 364,
+          "label_cs": "Írán"
+        },
+        {
+          "code": 372,
+          "label_cs": "Irsko"
+        },
+        {
+          "code": 352,
+          "label_cs": "Island"
+        },
+        {
+          "code": 380,
+          "label_cs": "Itálie"
+        },
+        {
+          "code": 376,
+          "label_cs": "Izrael"
+        },
+        {
+          "code": 388,
+          "label_cs": "Jamajka"
+        },
+        {
+          "code": 392,
+          "label_cs": "Japonsko"
+        },
+        {
+          "code": 887,
+          "label_cs": "Jemen"
+        },
+        {
+          "code": 832,
+          "label_cs": "Jersey"
+        },
+        {
+          "code": 710,
+          "label_cs": "Jihoafrická republika"
+        },
+        {
+          "code": 239,
+          "label_cs": "Jižní Georgie a Jižní Sandwichovy ostrovy"
+        },
+        {
+          "code": 410,
+          "label_cs": "Jižní Korea"
+        },
+        {
+          "code": 728,
+          "label_cs": "Jižní Súdán"
+        },
+        {
+          "code": 400,
+          "label_cs": "Jordánsko"
+        },
+        {
+          "code": 136,
+          "label_cs": "Kajmanské ostrovy"
+        },
+        {
+          "code": 116,
+          "label_cs": "Kambodža"
+        },
+        {
+          "code": 120,
+          "label_cs": "Kamerun"
+        },
+        {
+          "code": 124,
+          "label_cs": "Kanada"
+        },
+        {
+          "code": 132,
+          "label_cs": "Kapverdy"
+        },
+        {
+          "code": 634,
+          "label_cs": "Katar"
+        },
+        {
+          "code": 398,
+          "label_cs": "Kazachstán"
+        },
+        {
+          "code": 404,
+          "label_cs": "Keňa"
+        },
+        {
+          "code": 296,
+          "label_cs": "Kiribati"
+        },
+        {
+          "code": 166,
+          "label_cs": "Kokosové ostrovy"
+        },
+        {
+          "code": 170,
+          "label_cs": "Kolumbie"
+        },
+        {
+          "code": 174,
+          "label_cs": "Komory"
+        },
+        {
+          "code": 178,
+          "label_cs": "Kongo"
+        },
+        {
+          "code": 188,
+          "label_cs": "Kostarika"
+        },
+        {
+          "code": 192,
+          "label_cs": "Kuba"
+        },
+        {
+          "code": 414,
+          "label_cs": "Kuvajt"
+        },
+        {
+          "code": 196,
+          "label_cs": "Kypr"
+        },
+        {
+          "code": 417,
+          "label_cs": "Kyrgyzstán"
+        },
+        {
+          "code": 418,
+          "label_cs": "Laos"
+        },
+        {
+          "code": 426,
+          "label_cs": "Lesotho"
+        },
+        {
+          "code": 422,
+          "label_cs": "Libanon"
+        },
+        {
+          "code": 430,
+          "label_cs": "Libérie"
+        },
+        {
+          "code": 434,
+          "label_cs": "Libye"
+        },
+        {
+          "code": 438,
+          "label_cs": "Lichtenštejnsko"
+        },
+        {
+          "code": 440,
+          "label_cs": "Litva"
+        },
+        {
+          "code": 428,
+          "label_cs": "Lotyšsko"
+        },
+        {
+          "code": 442,
+          "label_cs": "Lucembursko"
+        },
+        {
+          "code": 446,
+          "label_cs": "Macao"
+        },
+        {
+          "code": 450,
+          "label_cs": "Madagaskar"
+        },
+        {
+          "code": 348,
+          "label_cs": "Maďarsko"
+        },
+        {
+          "code": 807,
+          "label_cs": "Makedonie"
+        },
+        {
+          "code": 458,
+          "label_cs": "Malajsie"
+        },
+        {
+          "code": 454,
+          "label_cs": "Malawi"
+        },
+        {
+          "code": 462,
+          "label_cs": "Maledivy"
+        },
+        {
+          "code": 466,
+          "label_cs": "Mali"
+        },
+        {
+          "code": 470,
+          "label_cs": "Malta"
+        },
+        {
+          "code": 504,
+          "label_cs": "Maroko"
+        },
+        {
+          "code": 584,
+          "label_cs": "Marshallovy ostrovy"
+        },
+        {
+          "code": 474,
+          "label_cs": "Martinik"
+        },
+        {
+          "code": 480,
+          "label_cs": "Mauricius"
+        },
+        {
+          "code": 478,
+          "label_cs": "Mauritánie"
+        },
+        {
+          "code": 175,
+          "label_cs": "Mayotte"
+        },
+        {
+          "code": 581,
+          "label_cs": "Menší odlehlé ostrovy USA"
+        },
+        {
+          "code": 484,
+          "label_cs": "Mexiko"
+        },
+        {
+          "code": 583,
+          "label_cs": "Mikronésie"
+        },
+        {
+          "code": 498,
+          "label_cs": "Moldavsko"
+        },
+        {
+          "code": 492,
+          "label_cs": "Monako"
+        },
+        {
+          "code": 496,
+          "label_cs": "Mongolsko"
+        },
+        {
+          "code": 500,
+          "label_cs": "Montserrat"
+        },
+        {
+          "code": 508,
+          "label_cs": "Mosambik"
+        },
+        {
+          "code": 104,
+          "label_cs": "Myanmar"
+        },
+        {
+          "code": 516,
+          "label_cs": "Namibie"
+        },
+        {
+          "code": 520,
+          "label_cs": "Nauru"
+        },
+        {
+          "code": 276,
+          "label_cs": "Německo"
+        },
+        {
+          "code": 524,
+          "label_cs": "Nepál"
+        },
+        {
+          "code": 562,
+          "label_cs": "Niger"
+        },
+        {
+          "code": 566,
+          "label_cs": "Nigérie"
+        },
+        {
+          "code": 558,
+          "label_cs": "Nikaragua"
+        },
+        {
+          "code": 570,
+          "label_cs": "Niue"
+        },
+        {
+          "code": 528,
+          "label_cs": "Nizozemsko"
+        },
+        {
+          "code": 574,
+          "label_cs": "Norfolk"
+        },
+        {
+          "code": 578,
+          "label_cs": "Norsko"
+        },
+        {
+          "code": 540,
+          "label_cs": "Nová Kaledonie"
+        },
+        {
+          "code": 554,
+          "label_cs": "Nový Zéland"
+        },
+        {
+          "code": 512,
+          "label_cs": "Omán"
+        },
+        {
+          "code": 833,
+          "label_cs": "Ostrov Man"
+        },
+        {
+          "code": 586,
+          "label_cs": "Pákistán"
+        },
+        {
+          "code": 585,
+          "label_cs": "Palau"
+        },
+        {
+          "code": 275,
+          "label_cs": "Palestinská autonomie"
+        },
+        {
+          "code": 591,
+          "label_cs": "Panama"
+        },
+        {
+          "code": 598,
+          "label_cs": "Papua-Nová Guinea"
+        },
+        {
+          "code": 600,
+          "label_cs": "Paraguay"
+        },
+        {
+          "code": 604,
+          "label_cs": "Peru"
+        },
+        {
+          "code": 612,
+          "label_cs": "Pitcairnovy ostrovy"
+        },
+        {
+          "code": 384,
+          "label_cs": "Pobřeží slonoviny"
+        },
+        {
+          "code": 616,
+          "label_cs": "Polsko"
+        },
+        {
+          "code": 630,
+          "label_cs": "Portoriko"
+        },
+        {
+          "code": 620,
+          "label_cs": "Portugalsko"
+        },
+        {
+          "code": 40,
+          "label_cs": "Rakousko"
+        },
+        {
+          "code": 638,
+          "label_cs": "Réunion"
+        },
+        {
+          "code": 226,
+          "label_cs": "Rovníková Guinea"
+        },
+        {
+          "code": 642,
+          "label_cs": "Rumunsko"
+        },
+        {
+          "code": 643,
+          "label_cs": "Rusko"
+        },
+        {
+          "code": 646,
+          "label_cs": "Rwanda"
+        },
+        {
+          "code": 300,
+          "label_cs": "Řecko"
+        },
+        {
+          "code": 666,
+          "label_cs": "Saint-Pierre a Miquelon"
+        },
+        {
+          "code": 222,
+          "label_cs": "Salvador"
+        },
+        {
+          "code": 882,
+          "label_cs": "Samoa"
+        },
+        {
+          "code": 674,
+          "label_cs": "San Marino"
+        },
+        {
+          "code": 682,
+          "label_cs": "Saúdská Arábie"
+        },
+        {
+          "code": 686,
+          "label_cs": "Senegal"
+        },
+        {
+          "code": 408,
+          "label_cs": "Severní Korea"
+        },
+        {
+          "code": 580,
+          "label_cs": "Severní Mariany"
+        },
+        {
+          "code": 690,
+          "label_cs": "Seychely"
+        },
+        {
+          "code": 694,
+          "label_cs": "Sierra Leone"
+        },
+        {
+          "code": 702,
+          "label_cs": "Singapur"
+        },
+        {
+          "code": 703,
+          "label_cs": "Slovensko"
+        },
+        {
+          "code": 705,
+          "label_cs": "Slovinsko"
+        },
+        {
+          "code": 706,
+          "label_cs": "Somálsko"
+        },
+        {
+          "code": 784,
+          "label_cs": "Spojené arabské emiráty"
+        },
+        {
+          "code": 826,
+          "label_cs": "Spojené království"
+        },
+        {
+          "code": 840,
+          "label_cs": "Spojené státy americké"
+        },
+        {
+          "code": 688,
+          "label_cs": "Srbsko"
+        },
+        {
+          "code": 140,
+          "label_cs": "Středoafrická republika"
+        },
+        {
+          "code": 729,
+          "label_cs": "Súdán"
+        },
+        {
+          "code": 740,
+          "label_cs": "Surinam"
+        },
+        {
+          "code": 654,
+          "label_cs": "Svatá Helena, Ascension a Tristan da Cunha"
+        },
+        {
+          "code": 662,
+          "label_cs": "Svatá Lucie"
+        },
+        {
+          "code": 652,
+          "label_cs": "Svatý Bartoloměj"
+        },
+        {
+          "code": 659,
+          "label_cs": "Svatý Kryštof a Nevis"
+        },
+        {
+          "code": 663,
+          "label_cs": "Svatý Martin (francouzská část)"
+        },
+        {
+          "code": 534,
+          "label_cs": "Svatý Martin (nizozemská část)"
+        },
+        {
+          "code": 678,
+          "label_cs": "Svatý Tomáš a Princův ostrov"
+        },
+        {
+          "code": 670,
+          "label_cs": "Svatý Vincenc a Grenadiny"
+        },
+        {
+          "code": 748,
+          "label_cs": "Svazijsko"
+        },
+        {
+          "code": 760,
+          "label_cs": "Sýrie"
+        },
+        {
+          "code": 90,
+          "label_cs": "Šalamounovy ostrovy"
+        },
+        {
+          "code": 724,
+          "label_cs": "Španělsko"
+        },
+        {
+          "code": 744,
+          "label_cs": "Špicberky a Jan Mayen"
+        },
+        {
+          "code": 144,
+          "label_cs": "Šrí Lanka"
+        },
+        {
+          "code": 752,
+          "label_cs": "Švédsko"
+        },
+        {
+          "code": 756,
+          "label_cs": "Švýcarsko"
+        },
+        {
+          "code": 762,
+          "label_cs": "Tádžikistán"
+        },
+        {
+          "code": 834,
+          "label_cs": "Tanzanie"
+        },
+        {
+          "code": 764,
+          "label_cs": "Thajsko"
+        },
+        {
+          "code": 158,
+          "label_cs": "Tchaj-wan"
+        },
+        {
+          "code": 768,
+          "label_cs": "Togo"
+        },
+        {
+          "code": 772,
+          "label_cs": "Tokelau"
+        },
+        {
+          "code": 776,
+          "label_cs": "Tonga"
+        },
+        {
+          "code": 780,
+          "label_cs": "Trinidad a Tobago"
+        },
+        {
+          "code": 788,
+          "label_cs": "Tunisko"
+        },
+        {
+          "code": 792,
+          "label_cs": "Turecko"
+        },
+        {
+          "code": 795,
+          "label_cs": "Turkmenistán"
+        },
+        {
+          "code": 796,
+          "label_cs": "Turks a Caicos"
+        },
+        {
+          "code": 798,
+          "label_cs": "Tuvalu"
+        },
+        {
+          "code": 800,
+          "label_cs": "Uganda"
+        },
+        {
+          "code": 804,
+          "label_cs": "Ukrajina"
+        },
+        {
+          "code": 858,
+          "label_cs": "Uruguay"
+        },
+        {
+          "code": 860,
+          "label_cs": "Uzbekistán"
+        },
+        {
+          "code": 162,
+          "label_cs": "Vánoční ostrov"
+        },
+        {
+          "code": 548,
+          "label_cs": "Vanuatu"
+        },
+        {
+          "code": 336,
+          "label_cs": "Vatikán"
+        },
+        {
+          "code": 862,
+          "label_cs": "Venezuela"
+        },
+        {
+          "code": 704,
+          "label_cs": "Vietnam"
+        },
+        {
+          "code": 626,
+          "label_cs": "Východní Timor"
+        },
+        {
+          "code": 876,
+          "label_cs": "Wallis a Futuna"
+        },
+        {
+          "code": 894,
+          "label_cs": "Zambie"
+        },
+        {
+          "code": 732,
+          "label_cs": "Západní Sahara"
+        },
+        {
+          "code": 716,
+          "label_cs": "Zimbabwe"
+        }
+      ],
+      "label_en": "Country"
+    },
+    "locality_region_id": {
+      "api_param": "locality_region_id",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 10,
+          "label_cs": "Hlavní město Praha"
+        },
+        {
+          "code": 1,
+          "label_cs": "Jihočeský kraj"
+        },
+        {
+          "code": 14,
+          "label_cs": "Jihomoravský kraj"
+        },
+        {
+          "code": 3,
+          "label_cs": "Karlovarský kraj"
+        },
+        {
+          "code": 13,
+          "label_cs": "Kraj Vysočina"
+        },
+        {
+          "code": 6,
+          "label_cs": "Královéhradecký kraj"
+        },
+        {
+          "code": 5,
+          "label_cs": "Liberecký kraj"
+        },
+        {
+          "code": 12,
+          "label_cs": "Moravskoslezský kraj"
+        },
+        {
+          "code": 8,
+          "label_cs": "Olomoucký kraj"
+        },
+        {
+          "code": 7,
+          "label_cs": "Pardubický kraj"
+        },
+        {
+          "code": 2,
+          "label_cs": "Plzeňský kraj"
+        },
+        {
+          "code": 11,
+          "label_cs": "Středočeský kraj"
+        },
+        {
+          "code": 4,
+          "label_cs": "Ústecký kraj"
+        },
+        {
+          "code": 9,
+          "label_cs": "Zlínský kraj"
+        }
+      ],
+      "label_en": "Region (kraj)",
+      "example": 10
+    },
+    "locality_district_id": {
+      "api_param": "locality_district_id",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 48,
+          "label_cs": "Benešov"
+        },
+        {
+          "code": 49,
+          "label_cs": "Beroun"
+        },
+        {
+          "code": 71,
+          "label_cs": "Blansko"
+        },
+        {
+          "code": 72,
+          "label_cs": "Brno-město"
+        },
+        {
+          "code": 73,
+          "label_cs": "Brno-venkov"
+        },
+        {
+          "code": 60,
+          "label_cs": "Bruntál"
+        },
+        {
+          "code": 74,
+          "label_cs": "Břeclav"
+        },
+        {
+          "code": 18,
+          "label_cs": "Česká Lípa"
+        },
+        {
+          "code": 1,
+          "label_cs": "České Budějovice"
+        },
+        {
+          "code": 2,
+          "label_cs": "Český Krumlov"
+        },
+        {
+          "code": 19,
+          "label_cs": "Děčín"
+        },
+        {
+          "code": 8,
+          "label_cs": "Domažlice"
+        },
+        {
+          "code": 61,
+          "label_cs": "Frýdek-Místek"
+        },
+        {
+          "code": 66,
+          "label_cs": "Havlíčkův Brod"
+        },
+        {
+          "code": 75,
+          "label_cs": "Hodonín"
+        },
+        {
+          "code": 28,
+          "label_cs": "Hradec Králové"
+        },
+        {
+          "code": 9,
+          "label_cs": "Cheb"
+        },
+        {
+          "code": 20,
+          "label_cs": "Chomutov"
+        },
+        {
+          "code": 29,
+          "label_cs": "Chrudim"
+        },
+        {
+          "code": 21,
+          "label_cs": "Jablonec nad Nisou"
+        },
+        {
+          "code": 46,
+          "label_cs": "Jeseník"
+        },
+        {
+          "code": 30,
+          "label_cs": "Jičín"
+        },
+        {
+          "code": 67,
+          "label_cs": "Jihlava"
+        },
+        {
+          "code": 3,
+          "label_cs": "Jindřichův Hradec"
+        },
+        {
+          "code": 10,
+          "label_cs": "Karlovy Vary"
+        },
+        {
+          "code": 62,
+          "label_cs": "Karviná"
+        },
+        {
+          "code": 50,
+          "label_cs": "Kladno"
+        },
+        {
+          "code": 11,
+          "label_cs": "Klatovy"
+        },
+        {
+          "code": 51,
+          "label_cs": "Kolín"
+        },
+        {
+          "code": 39,
+          "label_cs": "Kroměříž"
+        },
+        {
+          "code": 52,
+          "label_cs": "Kutná Hora"
+        },
+        {
+          "code": 22,
+          "label_cs": "Liberec"
+        },
+        {
+          "code": 23,
+          "label_cs": "Litoměřice"
+        },
+        {
+          "code": 24,
+          "label_cs": "Louny"
+        },
+        {
+          "code": 54,
+          "label_cs": "Mělník"
+        },
+        {
+          "code": 53,
+          "label_cs": "Mladá Boleslav"
+        },
+        {
+          "code": 25,
+          "label_cs": "Most"
+        },
+        {
+          "code": 31,
+          "label_cs": "Náchod"
+        },
+        {
+          "code": 63,
+          "label_cs": "Nový Jičín"
+        },
+        {
+          "code": 55,
+          "label_cs": "Nymburk"
+        },
+        {
+          "code": 42,
+          "label_cs": "Olomouc"
+        },
+        {
+          "code": 64,
+          "label_cs": "Opava"
+        },
+        {
+          "code": 65,
+          "label_cs": "Ostrava-město"
+        },
+        {
+          "code": 32,
+          "label_cs": "Pardubice"
+        },
+        {
+          "code": 68,
+          "label_cs": "Pelhřimov"
+        },
+        {
+          "code": 4,
+          "label_cs": "Písek"
+        },
+        {
+          "code": 13,
+          "label_cs": "Plzeň-jih"
+        },
+        {
+          "code": 12,
+          "label_cs": "Plzeň-město"
+        },
+        {
+          "code": 14,
+          "label_cs": "Plzeň-sever"
+        },
+        {
+          "code": 5001,
+          "label_cs": "Praha 1"
+        },
+        {
+          "code": 5010,
+          "label_cs": "Praha 10"
+        },
+        {
+          "code": 5002,
+          "label_cs": "Praha 2"
+        },
+        {
+          "code": 5003,
+          "label_cs": "Praha 3"
+        },
+        {
+          "code": 5004,
+          "label_cs": "Praha 4"
+        },
+        {
+          "code": 5005,
+          "label_cs": "Praha 5"
+        },
+        {
+          "code": 5006,
+          "label_cs": "Praha 6"
+        },
+        {
+          "code": 5007,
+          "label_cs": "Praha 7"
+        },
+        {
+          "code": 5008,
+          "label_cs": "Praha 8"
+        },
+        {
+          "code": 5009,
+          "label_cs": "Praha 9"
+        },
+        {
+          "code": 56,
+          "label_cs": "Praha-východ"
+        },
+        {
+          "code": 57,
+          "label_cs": "Praha-západ"
+        },
+        {
+          "code": 5,
+          "label_cs": "Prachatice"
+        },
+        {
+          "code": 40,
+          "label_cs": "Prostějov"
+        },
+        {
+          "code": 43,
+          "label_cs": "Přerov"
+        },
+        {
+          "code": 58,
+          "label_cs": "Příbram"
+        },
+        {
+          "code": 59,
+          "label_cs": "Rakovník"
+        },
+        {
+          "code": 15,
+          "label_cs": "Rokycany"
+        },
+        {
+          "code": 33,
+          "label_cs": "Rychnov nad Kněžnou"
+        },
+        {
+          "code": 34,
+          "label_cs": "Semily"
+        },
+        {
+          "code": 16,
+          "label_cs": "Sokolov"
+        },
+        {
+          "code": 6,
+          "label_cs": "Strakonice"
+        },
+        {
+          "code": 35,
+          "label_cs": "Svitavy"
+        },
+        {
+          "code": 44,
+          "label_cs": "Šumperk"
+        },
+        {
+          "code": 7,
+          "label_cs": "Tábor"
+        },
+        {
+          "code": 17,
+          "label_cs": "Tachov"
+        },
+        {
+          "code": 26,
+          "label_cs": "Teplice"
+        },
+        {
+          "code": 36,
+          "label_cs": "Trutnov"
+        },
+        {
+          "code": 69,
+          "label_cs": "Třebíč"
+        },
+        {
+          "code": 41,
+          "label_cs": "Uherské Hradiště"
+        },
+        {
+          "code": 27,
+          "label_cs": "Ústí nad Labem"
+        },
+        {
+          "code": 37,
+          "label_cs": "Ústí nad Orlicí"
+        },
+        {
+          "code": 45,
+          "label_cs": "Vsetín"
+        },
+        {
+          "code": 76,
+          "label_cs": "Vyškov"
+        },
+        {
+          "code": 38,
+          "label_cs": "Zlín"
+        },
+        {
+          "code": 77,
+          "label_cs": "Znojmo"
+        },
+        {
+          "code": 70,
+          "label_cs": "Žďár nad Sázavou"
+        }
+      ],
+      "label_en": "District (okres)",
+      "example": 72
+    },
+    "locality_entity_type": {
+      "api_param": "locality_entity_type",
+      "type": "enum_string",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Locality entity type (from suggest)"
+    },
+    "locality_entity_id": {
+      "api_param": "locality_entity_id",
+      "type": "id",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Locality entity id (from suggest)"
+    },
+    "locality_radius": {
+      "api_param": "locality_radius",
+      "type": "number",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Search radius around locality (km)"
+    },
+    "pois": {
+      "api_param": "pois",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Autobusová zastávka",
+          "label_en": "Bus stop"
+        },
+        {
+          "code": 2,
+          "label_cs": "Vlakové nádraží",
+          "label_en": "Train station"
+        },
+        {
+          "code": 3,
+          "label_cs": "Pošta",
+          "label_en": "Post office"
+        },
+        {
+          "code": 4,
+          "label_cs": "Bankomat",
+          "label_en": "ATM"
+        },
+        {
+          "code": 5,
+          "label_cs": "Praktický lékař",
+          "label_en": "GP / doctor"
+        },
+        {
+          "code": 6,
+          "label_cs": "Veterinář",
+          "label_en": "Vet"
+        },
+        {
+          "code": 7,
+          "label_cs": "Základní škola",
+          "label_en": "Primary school"
+        },
+        {
+          "code": 8,
+          "label_cs": "Mateřská škola",
+          "label_en": "Kindergarten"
+        },
+        {
+          "code": 9,
+          "label_cs": "Supermarket",
+          "label_en": "Supermarket"
+        },
+        {
+          "code": 10,
+          "label_cs": "Malý obchod",
+          "label_en": "Small shop"
+        },
+        {
+          "code": 11,
+          "label_cs": "Restaurace, hospoda",
+          "label_en": "Restaurant/pub"
+        },
+        {
+          "code": 12,
+          "label_cs": "Dětské hřiště",
+          "label_en": "Playground"
+        },
+        {
+          "code": 13,
+          "label_cs": "Metro",
+          "label_en": "Metro"
+        }
+      ],
+      "label_en": "Points of interest nearby"
+    },
+    "pois_distance": {
+      "api_param": "pois_distance",
+      "type": "number",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Max distance to selected POIs (m)"
+    },
+    "price": {
+      "api_params": {
+        "from": "price_from",
+        "to": "price_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "CZK",
+      "label_en": "Price",
+      "example": {
+        "from": 1000000,
+        "to": 5000000
+      }
+    },
+    "balcony": {
+      "api_param": "balcony",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has balcony",
+      "label_cs": "Balkón",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ],
+      "example": 1
+    },
+    "terrace": {
+      "api_param": "terrace",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has terrace",
+      "label_cs": "Terasa",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "parking_lots": {
+      "api_param": "parking_lots",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has parking",
+      "label_cs": "Parkování",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "elevator": {
+      "api_param": "elevator",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has elevator",
+      "label_cs": "Výtah",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "loggia": {
+      "api_param": "loggia",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has loggia",
+      "label_cs": "Lodžie",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "cellar": {
+      "api_param": "cellar",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has cellar",
+      "label_cs": "Sklep",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "garage": {
+      "api_param": "garage",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has garage",
+      "label_cs": "Garáž",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "easy_access": {
+      "api_param": "easy_access",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Barrier-free / accessible",
+      "label_cs": "Bezbariérový",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "garden": {
+      "api_param": "garden",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "komercni"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has garden",
+      "label_cs": "Zahrada",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "building_type": {
+      "api_param": "building_type",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Dřevostavba",
+          "label_en": "Wooden"
+        },
+        {
+          "code": 2,
+          "label_cs": "Cihlová",
+          "label_en": "Brick"
+        },
+        {
+          "code": 3,
+          "label_cs": "Kamenná",
+          "label_en": "Stone"
+        },
+        {
+          "code": 4,
+          "label_cs": "Montovaná",
+          "label_en": "Prefab/assembled"
+        },
+        {
+          "code": 5,
+          "label_cs": "Panelová",
+          "label_en": "Panel"
+        },
+        {
+          "code": 6,
+          "label_cs": "Skeletová",
+          "label_en": "Skeleton/frame"
+        },
+        {
+          "code": 7,
+          "label_cs": "Smíšená",
+          "label_en": "Mixed"
+        },
+        {
+          "code": 8,
+          "label_cs": "Modulární",
+          "label_en": "Modular"
+        }
+      ],
+      "label_en": "Building material/type",
+      "example": 2
+    },
+    "energy_efficiency_rating_cb": {
+      "api_param": "energy_efficiency_rating_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "A - Mimořádně úsporná",
+          "label_en": "A - Extremely economical"
+        },
+        {
+          "code": 2,
+          "label_cs": "B - Velmi úsporná",
+          "label_en": "B - Very economical"
+        },
+        {
+          "code": 3,
+          "label_cs": "C - Úsporná",
+          "label_en": "C - Economical"
+        },
+        {
+          "code": 4,
+          "label_cs": "D - Méně úsporná",
+          "label_en": "D - Less economical"
+        },
+        {
+          "code": 5,
+          "label_cs": "E - Nehospodárná",
+          "label_en": "E - Uneconomical"
+        },
+        {
+          "code": 6,
+          "label_cs": "F - Velmi nehospodárná",
+          "label_en": "F - Very uneconomical"
+        },
+        {
+          "code": 7,
+          "label_cs": "G - Mimořádně nehospodárná",
+          "label_en": "G - Extremely uneconomical"
+        }
+      ],
+      "label_en": "Energy efficiency rating",
+      "example": 3
+    },
+    "matterport": {
+      "api_param": "matterport",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has 3D tour (Matterport)",
+      "label_cs": "3D prohlídka",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "video": {
+      "api_param": "video",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has video",
+      "label_cs": "Video",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "ownership": {
+      "api_param": "ownership",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Osobní",
+          "label_en": "Personal"
+        },
+        {
+          "code": 2,
+          "label_cs": "Družstevní",
+          "label_en": "Cooperative"
+        },
+        {
+          "code": 3,
+          "label_cs": "Státní/obecní",
+          "label_en": "State/municipal"
+        }
+      ],
+      "label_en": "Ownership type",
+      "example": 1
+    },
+    "floor_number": {
+      "api_params": {
+        "from": "floor_number_from",
+        "to": "floor_number_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "byty"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "",
+      "label_en": "Floor number"
+    },
+    "usable_area": {
+      "api_params": {
+        "from": "usable_area_from",
+        "to": "usable_area_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "m2",
+      "label_en": "Usable floor area (m2)"
+    },
+    "advert_age": {
+      "api_params": {
+        "from": "advert_age_from",
+        "to": "advert_age_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "",
+      "label_en": "Listing age (max days since posted)",
+      "example": 30
+    },
+    "description_search": {
+      "api_param": "description_search",
+      "type": "string",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Full-text in description"
+    },
+    "floor_plan": {
+      "api_param": "floor_plan",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has floor plan",
+      "label_cs": "Půdorys",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "keywords": {
+      "api_param": "keywords",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 0,
+          "label_cs": "Ateliér"
+        },
+        {
+          "code": 0,
+          "label_cs": "Bazén"
+        },
+        {
+          "code": 0,
+          "label_cs": "Elektromobil"
+        },
+        {
+          "code": 0,
+          "label_cs": "Klimatizace"
+        },
+        {
+          "code": 0,
+          "label_cs": "Penthouse"
+        },
+        {
+          "code": 0,
+          "label_cs": "Recepce"
+        },
+        {
+          "code": 0,
+          "label_cs": "Rekuperace"
+        },
+        {
+          "code": 0,
+          "label_cs": "Sauna"
+        },
+        {
+          "code": 0,
+          "label_cs": "Vana"
+        },
+        {
+          "code": 0,
+          "label_cs": "Výhled"
+        }
+      ],
+      "label_en": "Keyword tags"
+    },
+    "image_sort_cb": {
+      "api_param": "image_sort_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 0,
+          "label_cs": "Výchozí",
+          "label_en": "Default"
+        },
+        {
+          "code": 1,
+          "label_cs": "Obývací prostor",
+          "label_en": "Living area"
+        },
+        {
+          "code": 6,
+          "label_cs": "Koupelna",
+          "label_en": "Bathroom"
+        },
+        {
+          "code": 5,
+          "label_cs": "Kuchyně",
+          "label_en": "Kitchen"
+        },
+        {
+          "code": 4,
+          "label_cs": "Ložnice",
+          "label_en": "Bedroom"
+        },
+        {
+          "code": 19,
+          "label_cs": "Zahrada",
+          "label_en": "Garden"
+        },
+        {
+          "code": 28,
+          "label_cs": "Dům zvenčí",
+          "label_en": "House exterior"
+        },
+        {
+          "code": 22,
+          "label_cs": "Plánek 2D/3D",
+          "label_en": "Floor plan 2D/3D"
+        }
+      ],
+      "label_en": "Sort photos by room type"
+    },
+    "furnished": {
+      "api_param": "furnished",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy"
+        ],
+        "type": [
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "Ano",
+          "label_en": "Yes"
+        },
+        {
+          "code": 2,
+          "label_cs": "Ne",
+          "label_en": "No"
+        },
+        {
+          "code": 3,
+          "label_cs": "Částečně",
+          "label_en": "Partly"
+        }
+      ],
+      "label_en": "Furnished",
+      "example": 1
+    },
+    "ready_date": {
+      "api_params": {
+        "from": "ready_date_from",
+        "to": "ready_date_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "byty",
+          "domy",
+          "komercni",
+          "ostatni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "",
+      "label_en": "Available-from date"
+    },
+    "room_count_cb": {
+      "api_param": "room_count_cb",
+      "type": "enum",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "values": [
+        {
+          "code": 1,
+          "label_cs": "1 pokoj",
+          "label_en": "1 room"
+        },
+        {
+          "code": 2,
+          "label_cs": "2 pokoje",
+          "label_en": "2 rooms"
+        },
+        {
+          "code": 3,
+          "label_cs": "3 pokoje",
+          "label_en": "3 rooms"
+        },
+        {
+          "code": 4,
+          "label_cs": "4 pokoje",
+          "label_en": "4 rooms"
+        },
+        {
+          "code": 5,
+          "label_cs": "5 a více pokojů",
+          "label_en": "5+ rooms"
+        },
+        {
+          "code": 6,
+          "label_cs": "Atypický",
+          "label_en": "Atypical"
+        }
+      ],
+      "label_en": "Room count",
+      "example": 2
+    },
+    "low_energy": {
+      "api_param": "low_energy",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Low-energy building",
+      "label_cs": "Nízkoenergetický",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "single_storey": {
+      "api_param": "single_storey",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Single-storey",
+      "label_cs": "Přízemní",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "standalone": {
+      "api_param": "standalone",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Detached / standalone",
+      "label_cs": "Samostatný",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "wooden": {
+      "api_param": "wooden",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Wooden building",
+      "label_cs": "Dřevostavba",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "multi_storey": {
+      "api_param": "multi_storey",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Multi-storey",
+      "label_cs": "Vícepodlažní",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "block_inline_building": {
+      "api_param": "block_inline_building",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Terraced / in a block",
+      "label_cs": "Řadový",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "basin": {
+      "api_param": "basin",
+      "type": "boolean",
+      "applies_to": {
+        "category": [
+          "domy"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "label_en": "Has pool",
+      "label_cs": "Bazén",
+      "values": [
+        {
+          "code": 1,
+          "label_en": "yes"
+        }
+      ]
+    },
+    "estate_area": {
+      "api_params": {
+        "from": "estate_area_from",
+        "to": "estate_area_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "domy",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "m2",
+      "label_en": "Land/plot area (m2)"
+    },
+    "price_m2": {
+      "api_params": {
+        "from": "price_m2_from",
+        "to": "price_m2_to"
+      },
+      "type": "range",
+      "applies_to": {
+        "category": [
+          "komercni",
+          "pozemky"
+        ],
+        "type": [
+          "prodej",
+          "pronajem"
+        ]
+      },
+      "unit": "CZK/m2",
+      "label_en": "Price per m2"
+    }
+  }
+}

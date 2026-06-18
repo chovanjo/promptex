@@ -1,0 +1,145 @@
+{
+  "pagination": {
+    "limit": 100,
+    "offset": 0,
+    "total": 19991
+  },
+  "search_title": "Byty na prodej",
+  "results": [
+    {
+      "advert_images": [
+        "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5BWLrlBU9AGpi8qm/a4b2.jpeg",
+        "//d18-a.sdn.cz/d_18/c_img_qB_A/nCTUX1iX5CNPfpBkK3GhcIPg/346a.jpeg",
+        "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtBwNESBk5bGpi8rC/9a70.jpeg"
+      ],
+      "advert_images_all": [
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5BWLrlBU9AGpi8qm/a4b2.jpeg",
+          "restb_room_type": 15
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_A/nCTUX1iX5CNPfpBkK3GhcIPg/346a.jpeg",
+          "restb_room_type": 28
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtBwNESBk5bGpi8rC/9a70.jpeg",
+          "restb_room_type": 5
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5CGpNZBU3GGpi8sA/b98b.jpeg",
+          "restb_room_type": 17
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtDgLT0BIPxGpi8sg/49c9.jpeg",
+          "restb_room_type": 6
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5BWZuTBUUFGpi8s0/a66b.jpeg",
+          "restb_room_type": 15
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtBM3KVBHHKGpi8tQ/f507.jpeg",
+          "restb_room_type": 22
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5bIUBBWuiGpi8tn/a5f7.jpeg",
+          "restb_room_type": 5
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5Do9kXBUk5Gpi8uJ/e8af.jpeg",
+          "restb_room_type": 15
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5BWZuTBUUFGpi8um/5860.jpeg",
+          "restb_room_type": 0
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5DwDWzBu1qGpi8vB/0bbe.jpeg",
+          "restb_room_type": 5
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5DwDWzBu1ZGpi8vV/c3d9.jpeg",
+          "restb_room_type": 17
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5CGpNZBU3FGpi8vr/7af9.jpeg",
+          "restb_room_type": 6
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/nCTUX1iX5DwDWzBuxKGpi8wJ/efd8.jpeg",
+          "restb_room_type": 21
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtBRc2UJtiGpi8we/0a53.jpeg",
+          "restb_room_type": 10
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qB_C/kcHp2YdDtDrxR2BIklGpi8xA/8d9e.jpeg",
+          "restb_room_type": 17
+        },
+        {
+          "advert_image_sdn_url": "//d18-a.sdn.cz/d_18/c_img_qA_A/kcHp2YdDtBM3KVN1tGOq2Jc/6b5c.jpeg",
+          "restb_room_type": 28
+        }
+      ],
+      "advert_name": "Prodej bytu 1+kk 53 m²",
+      "category_main_cb": {
+        "name": "Byty",
+        "value": 1
+      },
+      "category_sub_cb": {
+        "name": "1+kk",
+        "value": 2
+      },
+      "category_type_cb": {
+        "name": "Prodej",
+        "value": 1
+      },
+      "discount_show": false,
+      "has_matterport_url": false,
+      "has_video": false,
+      "hash_id": 2919646028,
+      "locality": {
+        "city": "Praha",
+        "city_seo_name": "praha",
+        "citypart": "Kyje",
+        "citypart_seo_name": "kyje",
+        "country": "Česká republika",
+        "country_id": 112,
+        "country_seo_name": "ceska-republika",
+        "district": "Praha 9",
+        "district_id": 5009,
+        "district_seo_name": "praha-9",
+        "entity_type": "address",
+        "geohash": "u2fm57q671",
+        "gps_lat": 50.1159026,
+        "gps_lon": 14.5655971,
+        "housenumber": "1700",
+        "inaccuracy_type": "gps",
+        "municipality": null,
+        "municipality_id": 3468,
+        "municipality_seo_name": null,
+        "quarter": "Praha 14",
+        "quarter_id": 120,
+        "quarter_seo_name": "praha-14",
+        "region": "Hlavní město Praha",
+        "region_id": 10,
+        "region_seo_name": "hlavni-mesto-praha",
+        "street": "Federova",
+        "street_id": 5181100,
+        "street_seo_name": "federova",
+        "streetnumber": "7",
+        "ward": null,
+        "ward_id": 13715,
+        "ward_seo_name": null
+      },
+      "poi_atm_distance": 987,
+      "poi_bus_public_transport_distance": 320,
+      "poi_kindergarten_distance": 818,
+      "poi_medic_distance": 1102,
+      "poi_metro_distance": 1043,
+      "poi_playground_distance": 235,
+      "poi_post_office_distance": 1205
+    }
+  ]
+}
